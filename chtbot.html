@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot UI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* Main background gradient and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #a7b6e9 0%, #f7d1e9 50%, #f8c9b2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        /* Frosted glass container for the chatbot */
+        .chatbot-container {
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Chat header */
+        .header {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Chatbot icon */
+        .chatbot-icon {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #007bff;
+        }
+
+        /* Chat messages area */
+        .chat-area {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Individual message styles */
+        .message {
+            max-width: 80%;
+            padding: 1rem 1.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.5rem;
+        }
+
+        .assistant-message {
+            background: rgba(255, 255, 255, 0.7);
+            align-self: flex-start;
+            border-bottom-left-radius: 0.5rem;
+        }
+
+        /* Input and send button area */
+        .input-area {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .input-area input {
+            flex-grow: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 2rem;
+            border: 1px solid #ccc;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .input-area input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        }
+
+        .send-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .send-button svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Fade-in animation for messages */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .chatbot-container {
+                height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+                padding: 0.5rem;
+            }
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chatbot-container">
+        
+        <!-- Chat Header -->
+        <div class="header">
+            <div class="chatbot-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 13.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM8.5 13.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM12 18.5c-.75 0-1.5-.2-2.12-.53-.41.28-1.04.47-1.7.47-1.1 0-2.22-.5-3.04-1.3-.82-.8-.98-1.92-.48-3.04.5-.5.7-1.13.7-1.7-.03-.92-.68-1.77-1.5-2.26-1.1-.64-1.8-1.7-1.8-2.92C3.12 4.6 7.02 2 12 2s8.88 2.6 8.88 5.76c0 1.22-.7 2.28-1.8 2.92-.82.49-1.47 1.34-1.5 2.26.03.57.24 1.2.7 1.7.82.82.98 1.94.48 3.04-.5.5-.7.66-1.7.47-.66.2-1.29.39-1.7.47-.62.33-1.37.53-2.12.53z"/>
+                </svg>
+            </div>
+            <h1>AI Assistant</h1>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-area">
+            <div class="message assistant-message">
+                Hello! How can I help you today?
+            </div>
+            <div class="message user-message">
+                Can you help me with a new design for my website?
+            </div>
+            <div class="message assistant-message">
+                Of course! I can help you with that. What kind of design are you looking for? You can describe your ideas or share an image.
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-area">
+            <input type="text" placeholder="Type your message here...">
+            <button class="send-button">
+                <svg viewBox="0 0 24 24">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+
+    </div>
+
+</body>
+</html>

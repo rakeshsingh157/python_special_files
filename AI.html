@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Task Scheduler</title>
+    <style>
+        /* General & Layout */
+        :root {
+            --purple-main: #a084e8;
+            --purple-light: #e7d6fb;
+            --pink-main: #e76ba2;
+            --pink-light: #f8b6d6;
+            --grey-text: #888;
+            --dark-text: #2d2d2d;
+            --light-bg: #f8f8fa;
+            --white: #fff;
+            --shadow-light: 0 4px 20px rgba(80, 80, 180, 0.08);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #f3e7fa 0%, #d0eaff 100%);
+            min-height: 100vh;
+        }
+        
+        /* Additional styles for AI Task Scheduler */
+        .task-meta-info {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .task-date, .task-time, .task-category, .task-reminder {
+            padding: 4px 8px;
+            background-color: var(--purple-light);
+            border-radius: 6px;
+            color: var(--purple-main);
+            font-weight: 500;
+        }
+
+        .reminder-select {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            margin-right: 10px;
+            background-color: var(--white);
+        }
+
+        .reminder-select:focus {
+            outline: none;
+            border-color: var(--purple-main);
+        }
+
+        @media (max-width: 1200px) {
+            .ai-task-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .task-meta {
+                margin-top: 15px;
+                align-self: flex-end;
+            }
+        }
+        
+        .dashboard-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 20px;
+            box-sizing: border-box;
+            background: transparent;
+        }
+
+        .icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 15px;
+    stroke: var(--grey-text);
+    transition: stroke 0.2s;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid #f0f0f0;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-logo {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: var(--purple-main);
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav ul li {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--grey-text);
+            font-size: 1.05rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sidebar nav ul li:hover {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-weight: 500;
+        }
+
+        .sidebar nav ul li.active {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-weight: 600;
+        }
+
+        .sidebar nav ul li:hover .icon,
+        .sidebar nav ul li.active .icon {
+            stroke: var(--purple-main);
+        }
+
+        .sidebar-bottom {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: #bbb;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-bottom div {
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-bottom .icon {
+            stroke: #bbb;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 0 40px;
+            background: transparent;
+            overflow-y: auto; /* Re-enable scrolling */
+            -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none;  /* Hide scrollbar for Firefox */
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .main-title {
+            font-size: 2.3rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+            color: var(--dark-text);
+        }
+
+        .subtitle {
+            color: var(--grey-text);
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark-text);
+        }
+
+        /* AI Task Scheduler Page */
+        .ai-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, var(--purple-light), var(--pink-light));
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .ai-hero-content {
+            flex: 1;
+            max-width: 60%;
+        }
+
+        .ai-hero .main-title {
+            color: var(--purple-main);
+        }
+
+        .ai-hero .subtitle {
+            color: var(--dark-text);
+            margin-bottom: 0;
+        }
+
+        .ai-illustration {
+            flex-shrink: 0;
+            margin-left: 40px;
+        }
+
+        .ai-illustration img {
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            height: 150px;
+        }
+
+        .ai-form-container {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(160, 132, 232, 0.07);
+            margin-bottom: 40px;
+        }
+
+        .ai-task-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 8px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--dark-text);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--purple-main);
+            box-shadow: 0 0 0 3px rgba(160, 132, 232, 0.2);
+        }
+
+        .ai-generate-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--purple-main);
+            color: var(--white);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .ai-generate-btn:hover {
+            background-color: #8c6fe5;
+            transform: translateY(-2px);
+        }
+
+        .ai-generate-btn:disabled {
+            background-color: #bbb;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-results-section .section-title {
+            margin-bottom: 20px;
+        }
+
+        .ai-task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .task-card {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 18px 22px;
+            box-shadow: 0 2px 12px rgba(160, 132, 232, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: opacity 0.5s ease-out; /* Added for smooth removal */
+        }
+
+        .task-content {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .task-details {
+            flex: 1;
+        }
+
+        .task-title {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--dark-text);
+        }
+
+        .task-description {
+            font-size: 0.9rem;
+            color: var(--grey-text);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .add-to-schedule-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--pink-main);
+            color: var(--white);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .add-to-schedule-btn.added {
+            background-color: #5cb85c;
+            cursor: default;
+        }
+
+        .add-to-schedule-btn:hover {
+            background-color: #d15690;
+        }
+
+        .task-icon-bg {
+            width: 48px;
+            height: 48px;
+            background: var(--purple-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .task-icon {
+            font-size: 1.5rem;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-id-display {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            font-family: monospace;
+        }
+
+        /* Calendar Panel */
+        .calendar-panel {
+            width: 380px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-left: 1px solid #f0f0f0;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-illustration {
+            margin-bottom: 32px;
+        }
+
+        .calendar-img-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(to top right, var(--purple-light), var(--pink-light));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 24px rgba(231, 214, 251, 0.5);
+        }
+
+        .calendar-rings {
+            position: absolute;
+            width: 60px;
+            height: 16px;
+            background: var(--white);
+            border-radius: 8px 8px 16px 16px;
+            top: 22px;
+            box-shadow: 0 2px 8px rgba(231, 214, 251, 0.8);
+        }
+
+        .calendar-date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            color: var(--purple-main);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .calendar-date .month {
+            font-size: 1.15rem;
+        }
+
+        .calendar-date .day-number {
+            font-size: 2.2rem;
+            color: var(--pink-main);
+            margin-top: 2px;
+        }
+
+        .calendar-widget {
+            width: 100%;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--purple-main);
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.08rem;
+        }
+
+        .nav-arrow {
+            cursor: pointer;
+        }
+
+        .today-btn {
+            color: var(--pink-main);
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .day-label {
+            color: var(--grey-text);
+            font-weight: 500;
+        }
+
+        .day-cell {
+            padding: 8px 0;
+            border-radius: 8px;
+            color: #555; /* Changed from #bbb for visibility */
+            cursor: pointer;
+        }
+
+        .filler {
+            visibility: hidden;
+        }
+
+        .day-cell.highlight {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-weight: bold;
+        }
+
+        .day-cell.today {
+            background: var(--pink-light);
+            color: var(--pink-main);
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(248, 182, 214, 0.5);
+        }
+        
+        .day-cell.has-pending {
+             background-color: #fff2f8; /* Very light pink for pending tasks */
+             color: #e76ba2; /* Darker pink text for better contrast */
+             font-weight: 600;
+             border: 2px solid #f8b6d6; /* Light border to make it more visible */
+        }
+        .day-cell.has-completed {
+            background-color: #4a2c7a; /* Dark purple for completed tasks */
+            color: #ffffff; /* White text for maximum contrast */
+            font-weight: 600;
+            border: 2px solid #6b46a3; /* Slightly lighter border */
+        }
+        .day-cell.has-both {
+            background: linear-gradient(135deg, #fff2f8 0%, #f0e6ff 50%, #4a2c7a 100%); /* Light to dark gradient */
+            color: #4a2c7a; /* Dark text for readability */
+            font-weight: 600;
+            border: 2px solid #a084e8; /* Purple border */
+        }
+        
+        /* Simple loading spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--purple-main);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+          <aside class="sidebar">
+            <div class="sidebar-logo">HelpScout</div>
+            <nav>
+                 <ul>
+                    <li onclick="window.location.href='/home'">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        Home
+                    </li>
+                    <li onclick="window.location.href='/profile/user'" >
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        My Profile
+                    </li>
+                    <li onclick="window.location.href='/schedule'">
+                        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Schedule
+                    </li>
+                    <li onclick="window.location.href='/AI'" class="active">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+                        AI
+                    </li>
+                    <li onclick="window.location.href='/collaboration'" >
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Collaboration
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-bottom">
+             <div onclick="window.location.href='/aiAssistant'" style="cursor: pointer;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Help?
+                </div>
+                <div id="logout-btn" style="cursor: pointer;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Log out
+                </div>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <div class="ai-hero">
+                <div class="ai-hero-content">
+                    <h1 class="main-title">Your Personal AI Scheduler</h1>
+                    <p class="subtitle">Tell me what you want to accomplish, and I'll create a smart schedule for you.</p>
+                </div>
+                <div class="ai-illustration">
+                    <img src="https://placehold.co/150x150/a084e8/ffffff?text=AI" alt="AI illustration">
+                </div>
+            </div>
+
+            <div class="ai-form-container">
+                <form id="ai-prompt-form" class="ai-task-form">
+                    <div class="form-group">
+                        <label for="ai-prompt" class="form-label">Describe your goal or task:</label>
+                        <textarea id="ai-prompt" class="form-textarea" rows="3" placeholder="e.g., 'Plan a workout schedule for the week to train for a marathon.'"></textarea>
+                    </div>
+                    <button type="submit" class="ai-generate-btn">Generate Schedule</button>
+                </form>
+            </div>
+
+            <div class="ai-results-section">
+                <h2 class="section-title">Suggested Tasks</h2>
+                <div id="ai-task-list" class="ai-task-list">
+                    </div>
+            </div>
+        </main>
+        
+        <aside class="calendar-panel">
+            <div class="calendar-illustration">
+                <div class="calendar-img-container">
+                    <div class="calendar-rings"></div>
+                    <div id="calendar-date-display" class="calendar-date">
+                        <span class="month">September</span>
+                        <span class="day-number">11</span>
+                    </div>
+                </div>
+            </div>
+            <div class="calendar-widget">
+                <div class="calendar-header">
+                    <span class="nav-arrow" id="prev-month">‹</span>
+                    <span class="current-month" id="current-month">September 2025</span>
+                    <span class="nav-arrow" id="next-month">›</span>
+                    <span class="today-btn" id="today-btn">TODAY</span>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    </div>
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let suggestedTasks = [];
+
+            // --- AI Form & Task Handling ---
+            const aiForm = document.getElementById('ai-prompt-form');
+            const generateBtn = aiForm.querySelector('.ai-generate-btn');
+
+            aiForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const promptInput = document.getElementById('ai-prompt');
+                const userInput = promptInput.value.trim();
+                
+                if (!userInput) {
+                    alert('Please describe your goal or task.');
+                    return;
+                }
+                
+                const originalText = generateBtn.textContent;
+                const taskListContainer = document.getElementById('ai-task-list');
+                generateBtn.textContent = 'Generating...';
+                generateBtn.disabled = true;
+                taskListContainer.innerHTML = '<div class="loader"></div>';
+                
+                try {
+                    const response = await fetch('/api/ai/generate-schedule', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: userInput }),
+                    });
+                    
+                    if(response.status === 401) {
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        suggestedTasks = data;
+                        displaySuggestedTasks(suggestedTasks);
+                    } else {
+                        throw new Error(data.error || 'Unknown error');
+                    }
+                } catch (error) {
+                    console.error('Network error during task generation:', error);
+                    taskListContainer.innerHTML = `<p style="color:red; text-align:center;">Failed to connect to the server.</p>`;
+                } finally {
+                    generateBtn.textContent = originalText;
+                    generateBtn.disabled = false;
+                }
+            });
+
+            async function addTaskToSchedule(taskIndex) {
+                const task = suggestedTasks[taskIndex];
+                const reminderSelect = document.getElementById(`reminder-${taskIndex}`);
+                task.reminder_setting = reminderSelect.value;
+                
+                try {
+                    const response = await fetch('/api/ai/add-task', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(task),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Task added successfully!');
+                        const taskCardToRemove = document.getElementById(`suggested-task-${taskIndex}`);
+                        if (taskCardToRemove) {
+                            taskCardToRemove.style.opacity = '0';
+                            setTimeout(() => {
+                                taskCardToRemove.remove();
+                                if (document.getElementById('ai-task-list').children.length === 0) {
+                                    document.getElementById('ai-task-list').innerHTML = '<p>All suggested tasks have been added!</p>';
+                                }
+                            }, 500);
+                        }
+                        // Refresh calendar to show new event
+                        renderCalendar();
+                    } else {
+                        throw new Error(data.error || 'Failed to add task');
+                    }
+                } catch (error) {
+                    console.error('Network error while adding task:', error);
+                    alert(`Failed to add task: ${error.message}`);
+                }
+            }
+
+            function displaySuggestedTasks(tasks) {
+                const taskListContainer = document.getElementById('ai-task-list');
+                taskListContainer.innerHTML = '';
+                
+                if (!tasks || tasks.length === 0) {
+                    taskListContainer.innerHTML = '<p>No tasks generated. Try a different description.</p>';
+                    return;
+                }
+                
+                tasks.forEach((task, index) => {
+                    const taskCard = document.createElement('div');
+                    taskCard.className = 'task-card ai-task-card';
+                    taskCard.id = `suggested-task-${index}`; 
+                    taskCard.innerHTML = `
+                        <div class="task-content">
+                            <div class="task-icon-bg"><span class="task-icon">${getEmojiForCategory(task.category)}</span></div>
+                            <div class="task-details">
+                                <h3 class="task-title">${task.title}</h3>
+                                <p class="task-description">${task.description || ''}</p>
+                                <div class="task-meta-info">
+                                    <span class="task-date">${formatDate(task.date)}</span>
+                                    <span class="task-time">${task.time}</span>
+                                    <span class="task-category">${task.category}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-meta">
+                            <select class="reminder-select" id="reminder-${index}">
+                                <option value="15 minutes" ${task.reminder === '15 minutes' ? 'selected' : ''}>15 min before</option>
+                                <option value="30 minutes" ${task.reminder === '30 minutes' ? 'selected' : ''}>30 min before</option>
+                                <option value="1 hour" ${task.reminder === '1 hour' ? 'selected' : ''}>1 hour before</option>
+                                <option value="2 hours" ${task.reminder === '2 hours' ? 'selected' : ''}>2 hours before</option>
+                                <option value="1 day" ${task.reminder === '1 day' ? 'selected' : ''}>1 day before</option>
+                            </select>
+                            <button class="add-to-schedule-btn">Add to Schedule</button>
+                        </div>
+                    `;
+                    taskListContainer.appendChild(taskCard);
+                    taskCard.querySelector('.add-to-schedule-btn').addEventListener('click', () => addTaskToSchedule(index));
+                });
+            }
+
+            // --- Calendar Logic ---
+            const calendarDateDisplay = document.getElementById('calendar-date-display');
+            const currentMonthEl = document.getElementById('current-month');
+            const calendarGrid = document.getElementById('calendar-grid');
+            
+            let calendarDate = new Date();
+
+            async function fetchAndDisplayEvents(year, month) {
+                 try {
+                    const response = await fetch(`/api/events?year=${year}&month=${month + 1}`);
+                    if (!response.ok) throw new Error('Failed to fetch events');
+                    const events = await response.json();
+
+                    const dayCells = calendarGrid.querySelectorAll('.day-cell');
+                    dayCells.forEach(cell => {
+                        const day = parseInt(cell.textContent, 10);
+                        if (events[day]) {
+                           if (events[day].hasCompleted && events[day].hasPending) {
+                                cell.classList.add('has-both');
+                           } else if (events[day].hasCompleted) {
+                                cell.classList.add('has-completed');
+                           } else if (events[day].hasPending) {
+                                cell.classList.add('has-pending');
+                           }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error fetching calendar events:", error);
+                }
+            }
+            
+            function renderCalendar() {
+                const year = calendarDate.getFullYear();
+                const month = calendarDate.getMonth();
+                const today = new Date();
+
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                
+                currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+                calendarDateDisplay.innerHTML = `
+                    <span class="month">${monthNames[today.getMonth()]}</span>
+                    <span class="day-number">${today.getDate()}</span>
+                `;
+
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                calendarGrid.innerHTML = ''; 
+
+                const dayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+                dayLabels.forEach(label => {
+                    const dayLabelEl = document.createElement('span');
+                    dayLabelEl.className = 'day-label';
+                    dayLabelEl.textContent = label;
+                    calendarGrid.appendChild(dayLabelEl);
+                });
+                
+                for (let i = 0; i < firstDayOfMonth; i++) {
+                    const fillerEl = document.createElement('span');
+                    fillerEl.className = 'filler';
+                    calendarGrid.appendChild(fillerEl);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayCellEl = document.createElement('span');
+                    dayCellEl.className = 'day-cell';
+                    dayCellEl.textContent = day;
+
+                    if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                        dayCellEl.classList.add('today');
+                    }
+                    calendarGrid.appendChild(dayCellEl);
+                }
+                
+                fetchAndDisplayEvents(year, month);
+            }
+
+            document.getElementById('prev-month').addEventListener('click', () => {
+                calendarDate.setMonth(calendarDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            document.getElementById('next-month').addEventListener('click', () => {
+                calendarDate.setMonth(calendarDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            document.getElementById('today-btn').addEventListener('click', () => {
+                calendarDate = new Date();
+                renderCalendar();
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                await fetch('/logout', { method: 'POST' });
+                window.location.href = '/';
+            });
+
+            // --- Utility Functions ---
+            function getEmojiForCategory(category = '') {
+                const icons = { 'work': '💼', 'home': '🏠', 'sports': '⚽', 'fun': '🎉', 'health': '🩺', 'fitness': '💪', 'personal': '👤', 'learning': '📚', 'finance': '💰', 'errands': '🛒', 'cleaning': '🧹', 'gardening': '🌱', 'cooking': '🍳', 'pets': '🐾', 'meeting': '🤝', 'commute': '🚗', 'networking': '🔗', 'admin': '📝', 'social': '🥳', 'entertainment': '🍿', 'travel': '✈', 'hobby': '🎨', 'volunteering': '❤', 'important': '❗', 'to-do': '✅', 'later': '⏳', 'family': '👨‍👩‍👧‍👦' };
+                return icons[category.toLowerCase()] || '📝';
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return 'No date';
+                const date = new Date(dateString + 'T00:00:00');
+                return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            }
+
+            // Initial Load
+            renderCalendar();
+        });
+    </script>
+</body>
+</html>
+

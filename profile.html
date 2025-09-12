@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Your Work!!</title>
+    <style>
+        /* General & Layout */
+        :root {
+            --purple-main: #a084e8;
+            --purple-light: #e7d6fb;
+            --pink-main: #e76ba2;
+            --pink-light: #f8b6d6;
+            --grey-text: #888;
+            --dark-text: #2d2d2d;
+            --light-bg: #f8f8fa;
+            --white: #fff;
+            --shadow-light: 0 4px 20px rgba(80, 80, 180, 0.08);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #f3e7fa 0%, #d0eaff 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            background: transparent;
+            gap: 20px;
+        }
+
+        .icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 15px;
+    stroke: var(--grey-text);
+    transition: stroke 0.2s;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid #f0f0f0;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: var(--purple-main);
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav ul li {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--grey-text);
+            font-size: 1.05rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sidebar nav ul li:hover {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-weight: 500;
+        }
+
+        .sidebar nav ul li.active {
+            background: var(--purple-light);
+            color: var(--purple-main);
+            font-weight: 600;
+        }
+
+        .sidebar nav ul li:hover .icon,
+        .sidebar nav ul li.active .icon {
+            stroke: var(--purple-main);
+        }
+
+        .sidebar-bottom {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: #bbb;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-bottom div {
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-bottom .icon {
+            stroke: #bbb;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 48px 40px;
+            background: transparent;
+        }
+
+        /* New Profile Page Styles */
+
+        .profile-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-avatar-container {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            padding: 5px;
+            background: linear-gradient(135deg, var(--purple-light), var(--pink-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer; /* Make it clickable */
+            position: relative;
+        }
+
+        .profile-avatar-container::after {
+            content: 'Change';
+            position: absolute;
+            bottom: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .profile-avatar-container:hover::after {
+            opacity: 1;
+        }
+
+        .profile-avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--white);
+        }
+
+        .profile-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-name {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin: 0 0 8px;
+        }
+
+        .profile-bio {
+            color: var(--grey-text);
+            line-height: 1.5;
+            margin: 0 0 20px;
+        }
+
+        .edit-profile-btn {
+            align-self: flex-start;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--purple-main);
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .edit-profile-btn:hover {
+            background-color: #8c6fe5;
+            transform: translateY(-2px);
+        }
+
+        .profile-stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(160, 132, 232, 0.07);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(160, 132, 232, 0.15);
+        }
+
+        .stat-icon-bg {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--purple-light);
+            flex-shrink: 0;
+        }
+
+        .stat-icon-bg svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .stat-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--purple-main);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--grey-text);
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .section-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .settings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .settings-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            color: var(--dark-text);
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .settings-list li:hover {
+            color: var(--purple-main);
+        }
+
+        .settings-list li:last-child {
+            border-bottom: none;
+        }
+
+        .setting-item {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .setting-arrow {
+            color: var(--grey-text);
+            font-size: 1.5rem;
+        }
+        
+        .calendar-panel {
+            width: 380px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-left: 1px solid #f0f0f0;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            flex-shrink: 0;
+        }
+
+        .calendar-illustration {
+            margin-bottom: 32px;
+        }
+
+        .calendar-img-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(to top right, var(--purple-light), var(--pink-light));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 24px rgba(231, 214, 251, 0.5);
+        }
+
+        .calendar-rings {
+            position: absolute;
+            width: 60px;
+            height: 16px;
+            background: var(--white);
+            border-radius: 8px 8px 16px 16px;
+            top: 22px;
+            box-shadow: 0 2px 8px rgba(231, 214, 251, 0.8);
+        }
+
+        .calendar-date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            color: var(--purple-main);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .calendar-date .month {
+            font-size: 1.15rem;
+        }
+
+        .calendar-date .day-number {
+            font-size: 2.2rem;
+            color: var(--pink-main);
+            margin-top: 2px;
+        }
+
+        .calendar-widget {
+            width: 100%;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--purple-main);
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.08rem;
+        }
+
+        .nav-arrow, .today-btn {
+            cursor: pointer;
+        }
+
+        .today-btn {
+            color: var(--pink-main);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .day-label {
+            color: var(--grey-text);
+            font-weight: 500;
+        }
+
+        .day-cell {
+            padding: 8px 0;
+            border-radius: 8px;
+            color: var(--grey-text);
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .filler {
+            visibility: hidden;
+        }
+
+        .day-cell.today {
+            background: var(--pink-light); 
+            color: var(--pink-main); 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(248, 182, 214, 0.5);
+        }
+        
+        /* Event Day Styles */
+        .day-cell.has-pending {
+             background-color: #fff2f8; /* Very light pink for pending tasks */
+             color: #e76ba2; /* Darker pink text for better contrast */
+             font-weight: 600;
+             border: 2px solid #f8b6d6; /* Light border to make it more visible */
+        }
+        .day-cell.has-completed {
+            background-color: #4a2c7a; /* Dark purple for completed tasks */
+            color: #ffffff; /* White text for maximum contrast */
+            font-weight: 600;
+            border: 2px solid #6b46a3; /* Slightly lighter border */
+        }
+        .day-cell.has-both {
+            background: linear-gradient(135deg, #fff2f8 0%, #f0e6ff 50%, #4a2c7a 100%); /* Light to dark gradient */
+            color: #4a2c7a; /* Dark text for readability */
+            font-weight: 600;
+            border: 2px solid #a084e8; /* Purple border */
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 { margin-top: 0; color: var(--dark-text); }
+        .modal-content input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .modal-actions { text-align: right; }
+        .modal-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .save-btn { background-color: var(--purple-main); color: white; }
+        .cancel-btn { background-color: #eee; margin-right: 10px; }
+        .modal-message { margin-top: 15px; font-weight: 500; }
+
+        /* Photo Upload Loader Styles */
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid var(--purple-main);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .sidebar, .calendar-panel {
+                width: 240px;
+            }
+            .main-content {
+                padding: 30px;
+            }
+            .profile-card {
+                padding: 30px;
+                gap: 20px;
+            }
+            .profile-avatar-container {
+                width: 120px;
+                height: 120px;
+            }
+            .profile-avatar {
+                width: 110px;
+                height: 110px;
+            }
+            .profile-name {
+                font-size: 1.8rem;
+            }
+            .profile-stats-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-container {
+                flex-direction: column;
+                padding: 10px;
+                height: auto;
+            }
+            .sidebar, .calendar-panel {
+                position: relative;
+                width: 100%;
+                height: auto;
+                top: 0;
+                margin-bottom: 20px;
+                padding: 20px;
+            }
+            .main-content {
+                padding: 20px 10px;
+            }
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            .edit-profile-btn {
+                align-self: center;
+            }
+            .profile-stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .profile-card {
+                padding: 20px;
+            }
+            .profile-name {
+                font-size: 1.5rem;
+            }
+            .profile-bio {
+                font-size: 0.9rem;
+            }
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            .calendar-panel {
+                padding: 20px 15px;
+            }
+            .calendar-grid {
+                gap: 3px;
+                font-size: 0.8rem;
+            }
+            .day-cell {
+                padding: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">HelpScout</div>
+            <nav>
+                 <ul>
+                    <li onclick="window.location.href='/home'">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        Home
+                    </li>
+                    <li onclick="window.location.href='/profile/user'" class="active">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        My Profile
+                    </li>
+                    <li onclick="window.location.href='/schedule'">
+                        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Schedule
+                    </li>
+                    <li onclick="window.location.href='/AI'">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+                        AI
+                    </li>
+                    <li onclick="window.location.href='/collaboration'" >
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Collaboration
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-bottom">
+               <div onclick="window.location.href='/aiAssistant'" style="cursor: pointer;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Help?
+                </div>
+                <div id="logout-btn" style="cursor: pointer;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Log out
+                </div>
+            </div>
+        </aside>
+        
+        
+        <main class="main-content">
+            <div class="profile-header">
+                <div class="profile-card">
+                    <div class="profile-avatar-container" id="avatar-container">
+                        <img src="https://ibb.co/0VYqLkBz" alt="User Profile Picture" class="profile-avatar" id="profile-avatar">
+                        <input type="file" id="photo-upload" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="profile-info">
+                        <h1 class="profile-name" id="profile-name">John Doe</h1>
+                        <p class="profile-bio" id="profile-bio">Productivity enthusiast and UI/UX designer. I'm passionate about building clean, user-friendly experiences that help people get things done.</p>
+                        <button class="edit-profile-btn" id="edit-profile-btn">Edit Profile</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-stats-container" style="padding-top: 20px; padding-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-icon-bg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a084e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div>
+                    <div class="stat-details">
+                        <div class="stat-number" id="tasks-done-stat">-</div>
+                        <div class="stat-label">Tasks Done</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-bg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a084e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg></div>
+                    <div class="stat-details">
+                        <div class="stat-number" id="undone-tasks-stat">-</div>
+                        <div class="stat-label">Undone Task</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-bg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a084e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>
+                    <div class="stat-details">
+                        <div class="stat-number" id="total-tasks-stat">-</div>
+                        <div class="stat-label">Total Task</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-sections">
+                <div class="section-card settings-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Account Settings</h2>
+                    </div>
+                    <ul class="settings-list">
+                        <li id="update-info-btn"><span class="setting-item">Update personal information</span><span class="setting-arrow">›</span></li>
+                        <li id="change-password-btn"><span class="setting-item">Change password</span><span class="setting-arrow">›</span></li>
+                        <li id="manage-notifications-btn"><span class="setting-item">Manage notifications</span><span class="setting-arrow">›</span></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+        
+        <aside class="calendar-panel">
+            <div class="calendar-illustration">
+                <div class="calendar-img-container">
+                    <div class="calendar-rings"></div>
+                    <div class="calendar-date"><span class="month"></span><span class="day-number"></span></div>
+                </div>
+            </div>
+            <div class="calendar-widget">
+                 <div class="calendar-header">
+                    <span class="nav-arrow">‹</span><span class="current-month"></span>
+                    <span class="nav-arrow">›</span><span class="today-btn">TODAY</span>
+                </div>
+                <div class="calendar-grid">
+                    <!-- Calendar days will be generated by JS -->
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals -->
+    <div id="password-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Change Password</h2>
+            <input type="password" id="old-password" placeholder="Current Password" required>
+            <input type="password" id="new-password" placeholder="New Password" required>
+            <input type="password" id="confirm-password" placeholder="Confirm New Password" required>
+            <p id="modal-message" class="modal-message"></p>
+            <div class="modal-actions">
+                <button id="cancel-password-change" class="modal-btn cancel-btn">Cancel</button>
+                <button id="save-password-change" class="modal-btn save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="contact-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Manage Notifications</h2>
+            <input type="email" id="email-input" placeholder="Email Address" required>
+            <input type="tel" id="phone-input" placeholder="Phone Number" required>
+            <p id="contact-modal-message" class="modal-message"></p>
+            <div class="modal-actions">
+                <button id="cancel-contact-change" class="modal-btn cancel-btn">Cancel</button>
+                <button id="save-contact-change" class="modal-btn save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Upload Loader -->
+    <div id="photo-loader" class="modal-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <p>Uploading photo...</p>
+        </div>
+    </div>
+
+
+    <!-- Embedded JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const profileNameEl = document.getElementById('profile-name');
+            const profileBioEl = document.getElementById('profile-bio');
+            const editBtn = document.getElementById('edit-profile-btn');
+            
+            // Photo upload
+            const avatarContainer = document.getElementById('avatar-container');
+            const photoUploadInput = document.getElementById('photo-upload');
+            const photoLoader = document.getElementById('photo-loader');
+
+            // Settings buttons
+            const updateInfoBtn = document.getElementById('update-info-btn');
+            const changePasswordBtn = document.getElementById('change-password-btn');
+            const manageNotificationsBtn = document.getElementById('manage-notifications-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            // Modal elements
+            const passwordModal = document.getElementById('password-modal');
+            const cancelPasswordBtn = document.getElementById('cancel-password-change');
+            const savePasswordBtn = document.getElementById('save-password-change');
+            const modalMessage = document.getElementById('modal-message');
+            
+            const contactModal = document.getElementById('contact-modal');
+            const cancelContactBtn = document.getElementById('cancel-contact-change');
+            const saveContactBtn = document.getElementById('save-contact-change');
+            const contactModalMessage = document.getElementById('contact-modal-message');
+
+            let currentUserEmail = '';
+            let currentUserPhone = '';
+
+            async function fetchProfileData() {
+                try {
+                    const response = await fetch(`/api/profile`);
+                    if (response.status === 401) {
+                        window.location.href = '/'; 
+                        return;
+                    }
+                    if (!response.ok) throw new Error('Failed to fetch profile data');
+                    const data = await response.json();
+
+                    document.getElementById('profile-avatar').src = data.avatar;
+                    profileNameEl.textContent = data.username;
+                    profileBioEl.textContent = data.bio;
+                    currentUserEmail = data.email;
+                    currentUserPhone = data.phone;
+                    document.getElementById('tasks-done-stat').textContent = data.stats.tasks_done;
+                    document.getElementById('undone-tasks-stat').textContent = data.stats.undone_tasks;
+                    document.getElementById('total-tasks-stat').textContent = data.stats.total_tasks;
+                } catch (error) {
+                    console.error("Error fetching profile data:", error);
+                    profileNameEl.textContent = 'Could not load profile.';
+                }
+            }
+
+            function handleEditClick() {
+                const isEditing = editBtn.textContent === 'Save Changes';
+
+                if (isEditing) {
+                    const newUsername = profileNameEl.querySelector('input').value;
+                    const newBio = profileBioEl.querySelector('textarea').value;
+                    
+                    profileNameEl.innerHTML = newUsername;
+                    profileBioEl.innerHTML = newBio;
+                    editBtn.textContent = 'Edit Profile';
+
+                    updateProfileData(newUsername, newBio);
+                } else {
+                    const currentUsername = profileNameEl.textContent;
+                    const currentBio = profileBioEl.textContent;
+
+                    profileNameEl.innerHTML = `<input type="text" value="${currentUsername}" style="font-size: 2.2rem; font-weight: 700; border: 1px solid #ccc; border-radius: 5px; width: 100%;">`;
+                    profileBioEl.innerHTML = `<textarea style="width: 100%; height: 80px; border: 1px solid #ccc; border-radius: 5px; padding: 5px; font-family: inherit; font-size: 1rem;">${currentBio}</textarea>`;
+                    editBtn.textContent = 'Save Changes';
+                }
+            }
+
+            async function updateProfileData(username, bio) {
+                try {
+                    const response = await fetch(`/api/profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, bio }),
+                    });
+                    if (!response.ok) throw new Error('Failed to update profile');
+                } catch (error) {
+                    console.error("Error updating profile:", error);
+                }
+            }
+            
+            // --- Photo Upload Logic ---
+            avatarContainer.addEventListener('click', () => {
+                photoUploadInput.click();
+            });
+
+            photoUploadInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                photoLoader.style.display = 'flex'; // Show loader
+
+                const apiKey = 'a6ff0b5d0e079fde78505c072d1216c7';
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const imgbbResult = await imgbbResponse.json();
+
+                    if (!imgbbResult.success) {
+                        throw new Error(imgbbResult.error.message || 'Image upload failed');
+                    }
+                    
+                    const imageUrl = imgbbResult.data.display_url;
+
+                    const backendResponse = await fetch('/api/profile/photo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ photo_url: imageUrl }),
+                    });
+
+                    if (!backendResponse.ok) {
+                        throw new Error('Failed to update profile photo on server');
+                    }
+                    
+                    document.getElementById('profile-avatar').src = imageUrl;
+
+                } catch (error) {
+                    console.error('Error uploading photo:', error);
+                    alert('Error uploading photo: ' + error.message);
+                } finally {
+                    photoLoader.style.display = 'none'; // Hide loader
+                }
+            });
+
+            // --- Event Listeners ---
+            editBtn.addEventListener('click', handleEditClick);
+            updateInfoBtn.addEventListener('click', () => {
+                 if (editBtn.textContent === 'Edit Profile') handleEditClick();
+            });
+            
+            manageNotificationsBtn.addEventListener('click', () => {
+                document.getElementById('email-input').value = currentUserEmail;
+                document.getElementById('phone-input').value = currentUserPhone;
+                contactModal.style.display = 'flex';
+            });
+
+            cancelContactBtn.addEventListener('click', () => {
+                contactModal.style.display = 'none';
+                contactModalMessage.textContent = '';
+            });
+            
+            saveContactBtn.addEventListener('click', async () => {
+                const newEmail = document.getElementById('email-input').value;
+                const newPhone = document.getElementById('phone-input').value;
+                if (!newEmail || !newPhone) {
+                    contactModalMessage.textContent = 'Please fill all fields.';
+                    contactModalMessage.style.color = 'red';
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/profile/contact`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: newEmail, phone: newPhone }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) {
+                         contactModalMessage.textContent = result.message || 'An error occurred.';
+                         contactModalMessage.style.color = 'red';
+                    } else {
+                        contactModalMessage.textContent = result.message;
+                        contactModalMessage.style.color = 'green';
+                        currentUserEmail = newEmail;
+                        currentUserPhone = newPhone;
+                        setTimeout(() => cancelContactBtn.click(), 2000);
+                    }
+                } catch(error) {
+                    contactModalMessage.textContent = 'An unexpected error occurred.';
+                    contactModalMessage.style.color = 'red';
+                }
+            });
+
+            changePasswordBtn.addEventListener('click', () => {
+                passwordModal.style.display = 'flex';
+            });
+            
+            cancelPasswordBtn.addEventListener('click', () => {
+                passwordModal.style.display = 'none';
+                modalMessage.textContent = '';
+                document.getElementById('old-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            });
+
+            savePasswordBtn.addEventListener('click', async () => {
+                const oldPassword = document.getElementById('old-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+
+                if (newPassword !== confirmPassword) {
+                    modalMessage.textContent = 'New passwords do not match.';
+                    modalMessage.style.color = 'red';
+                    return;
+                }
+                if (!oldPassword || !newPassword) {
+                     modalMessage.textContent = 'Please fill all fields.';
+                     modalMessage.style.color = 'red';
+                     return;
+                }
+                try {
+                    const response = await fetch(`/api/profile/change-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) {
+                         modalMessage.textContent = result.message || 'An error occurred.';
+                         modalMessage.style.color = 'red';
+                    } else {
+                        modalMessage.textContent = result.message;
+                        modalMessage.style.color = 'green';
+                        setTimeout(() => cancelPasswordBtn.click(), 2000);
+                    }
+                } catch (error) {
+                    modalMessage.textContent = 'An unexpected error occurred.';
+                    modalMessage.style.color = 'red';
+                }
+            });
+
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await fetch('/logout', { method: 'POST' });
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                }
+            });
+
+            // Initial data load
+            fetchProfileData();
+
+            // --- Calendar Logic ---
+            const calendarHeader = document.querySelector('.calendar-header .current-month');
+            const calendarGrid = document.querySelector('.calendar-grid');
+            const navArrows = document.querySelectorAll('.calendar-header .nav-arrow');
+            const todayBtn = document.querySelector('.calendar-header .today-btn');
+            const calendarMonthEl = document.querySelector('.calendar-date .month');
+            const calendarDayEl = document.querySelector('.calendar-date .day-number');
+
+            let calendarDate = new Date();
+
+            async function fetchAndDisplayEvents(year, month) {
+                try {
+                    // JS months are 0-indexed, API expects 1-indexed
+                    const response = await fetch(`/api/events?year=${year}&month=${month + 1}`);
+                    if (!response.ok) throw new Error('Failed to fetch events');
+                    const events = await response.json();
+
+                    const dayCells = calendarGrid.querySelectorAll('.day-cell');
+                    dayCells.forEach(cell => {
+                        const day = parseInt(cell.textContent, 10);
+                        if (events[day]) {
+                           if (events[day].hasCompleted && events[day].hasPending) {
+                                cell.classList.add('has-both');
+                           } else if (events[day].hasCompleted) {
+                                cell.classList.add('has-completed');
+                           } else if (events[day].hasPending) {
+                                cell.classList.add('has-pending');
+                           }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error fetching calendar events:", error);
+                }
+            }
+            
+            function renderCalendar() {
+                const year = calendarDate.getFullYear();
+                const month = calendarDate.getMonth();
+                const today = new Date();
+
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                
+                calendarHeader.textContent = `${monthNames[month]} ${year}`;
+                calendarMonthEl.textContent = monthNames[today.getMonth()];
+                calendarDayEl.textContent = today.getDate();
+
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                calendarGrid.innerHTML = ''; 
+
+                const dayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+                dayLabels.forEach(label => {
+                    const dayLabelEl = document.createElement('span');
+                    dayLabelEl.className = 'day-label';
+                    dayLabelEl.textContent = label;
+                    calendarGrid.appendChild(dayLabelEl);
+                });
+                
+                for (let i = 0; i < firstDayOfMonth; i++) {
+                    const fillerEl = document.createElement('span');
+                    fillerEl.className = 'filler';
+                    calendarGrid.appendChild(fillerEl);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayCellEl = document.createElement('span');
+                    dayCellEl.className = 'day-cell';
+                    dayCellEl.textContent = day;
+
+                    if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                        dayCellEl.classList.add('today');
+                    }
+                    calendarGrid.appendChild(dayCellEl);
+                }
+                
+                // Fetch events for the newly rendered month
+                fetchAndDisplayEvents(year, month);
+            }
+
+            navArrows[0].addEventListener('click', () => { // Previous
+                calendarDate.setMonth(calendarDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            navArrows[1].addEventListener('click', () => { // Next
+                calendarDate.setMonth(calendarDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            todayBtn.addEventListener('click', () => {
+                calendarDate = new Date();
+                renderCalendar();
+            });
+
+            renderCalendar(); // Initial render
+        });
+    </script>
+</body>
+</html>
+

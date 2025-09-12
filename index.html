@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login and Registration</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <!-- Embedded CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --purple-main: #a084e8;
+            --purple-light: #e7d6fb;
+            --pink-main: #e76ba2;
+            --pink-light: #f8b6d6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+        body {
+            background-color: var(--purple-light);
+            background: linear-gradient(to right, var(--pink-light), var(--purple-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+            position: relative;
+            overflow: hidden;
+            width: 768px;
+            max-width: 100%;
+            min-height: 480px;
+        }
+        .container p {
+            font-size: 14px;
+            line-height: 20px;
+            letter-spacing: 0.3px;
+            margin: 20px 0;
+        }
+        .container button.btn {
+            background-color: var(--purple-main);
+            color: #fff;
+            font-size: 12px;
+            padding: 10px 45px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .container button.btn:hover {
+            background-color: var(--pink-main);
+        }
+        .container button.hidden {
+            background-color: transparent;
+            border-color: #fff;
+        }
+        .container form {
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 40px;
+            height: 100%;
+        }
+        .input-box {
+            background-color: #f0f0f0;
+            border: none;
+            margin: 8px 0;
+            padding: 10px 15px;
+            font-size: 13px;
+            border-radius: 8px;
+            width: 100%;
+            outline: none;
+            display: flex;
+            align-items: center;
+        }
+        .input-box i {
+            margin-right: 10px;
+            color: var(--purple-main);
+        }
+        .input-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+        }
+        .form-box {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.6s ease-in-out;
+        }
+        .login {
+            left: 0;
+            width: 50%;
+            z-index: 2;
+        }
+        .register {
+            left: 0;
+            width: 50%;
+            opacity: 0;
+            z-index: 1;
+        }
+        .container.active .login {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        .container.active .register {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 5;
+            animation: move 0.6s;
+        }
+        @keyframes move {
+            0%, 49.99% { opacity: 0; z-index: 1; }
+            50%, 100% { opacity: 1; z-index: 5; }
+        }
+        .toggle-box {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            transition: all 0.6s ease-in-out;
+            border-radius: 150px 0 0 100px;
+            z-index: 100;
+        }
+        .container.active .toggle-box {
+            transform: translateX(-100%);
+            border-radius: 0 150px 100px 0;
+        }
+        .toggle {
+            background-color: var(--purple-main);
+            height: 100%;
+            background: linear-gradient(to right, var(--pink-main), var(--purple-main));
+            color: #fff;
+            position: relative;
+            left: -100%;
+            width: 200%;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+        }
+        .container.active .toggle {
+            transform: translateX(50%);
+        }
+        .toggle-panel {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 30px;
+            text-align: center;
+            top: 0;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+        }
+        .toggle-left { transform: translateX(-200%); }
+        .container.active .toggle-left { transform: translateX(0); }
+        .toggle-right { right: 0; transform: translateX(0); }
+        .container.active .toggle-right { transform: translateX(200%); }
+        .message-area {
+            padding: 10px; margin-bottom: 15px; border-radius: 5px;
+            width: 100%; text-align: center; font-size: 14px; display: none;
+        }
+        .success-message { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error-message { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        /* Loading Overlay */
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .loader-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .loader {
+            border: 5px solid var(--purple-light);
+            border-top: 5px solid var(--purple-main);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="container">
+        <!-- Loading Screen -->
+        <div class="loader-overlay" id="loader-overlay">
+            <div class="loader"></div>
+        </div>
+
+        <div class="form-box register">
+            <form id="register-form">
+                <h1>Create Account</h1>
+                <div id="register-message-area" class="message-area"></div>
+                <div class="input-box">
+                    <i class='bx bxs-user'></i>
+                    <input type="text" placeholder="Username" id="reg-username" required>
+                </div>
+                <div class="input-box">
+                    <i class='bx bxs-envelope'></i>
+                    <input type="email" placeholder="Email" id="reg-email" required>
+                </div>
+                <div class="input-box">
+                    <i class='bx bxs-phone'></i>
+                    <input type="tel" placeholder="Phone" id="reg-phone" required>
+                </div>
+                <div class="input-box">
+                    <i class='bx bxs-lock-alt'></i>
+                    <input type="password" placeholder="Password" id="reg-password" required>
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+        </div>
+        <div class="form-box login">
+            <form id="login-form">
+                <h1>Sign In</h1>
+                <div id="login-message-area" class="message-area"></div>
+                <div class="input-box">
+                    <i class='bx bxs-envelope'></i>
+                    <input type="email" placeholder="Email" id="login-email" required>
+                </div>
+                <div class="input-box">
+                    <i class='bx bxs-lock-alt'></i>
+                    <input type="password" placeholder="Password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+        </div>
+        <div class="toggle-box">
+            <div class="toggle">
+                <div class="toggle-panel toggle-left">
+                    <h1>Welcome Back!</h1>
+                    <p>Already have an account? Sign in to continue.</p>
+                    <button class="btn hidden" id="login">Sign In</button>
+                </div>
+                <div class="toggle-panel toggle-right">
+                    <h1>Hello, Friend!</h1>
+                    <p>Don't have an account? Register to get started.</p>
+                    <button class="btn hidden" id="register">Register</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embedded JavaScript -->
+    <script>
+        const container = document.getElementById('container');
+        const registerBtn = document.getElementById('register');
+        const loginBtn = document.getElementById('login');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginMessageArea = document.getElementById('login-message-area');
+        const registerMessageArea = document.getElementById('register-message-area');
+        const loaderOverlay = document.getElementById('loader-overlay');
+
+        registerBtn.addEventListener('click', () => container.classList.add('active'));
+        loginBtn.addEventListener('click', () => container.classList.remove('active'));
+        
+        const showLoader = () => loaderOverlay.classList.add('show');
+        const hideLoader = () => loaderOverlay.classList.remove('show');
+
+        function showMessage(messageArea, message, isError = false) {
+            messageArea.textContent = message;
+            messageArea.className = `message-area ${isError ? 'error-message' : 'success-message'}`;
+            messageArea.style.display = 'block';
+            setTimeout(() => { messageArea.style.display = 'none'; }, 5000);
+        }
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = {
+                username: document.getElementById('reg-username').value,
+                email: document.getElementById('reg-email').value,
+                phone: document.getElementById('reg-phone').value,
+                password: document.getElementById('reg-password').value,
+            };
+
+            showLoader();
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(registerMessageArea, result.message, false);
+                    setTimeout(() => {
+                        container.classList.remove('active');
+                        registerForm.reset();
+                    }, 2000);
+                } else {
+                    showMessage(registerMessageArea, result.message, true);
+                }
+            } catch (error) {
+                showMessage(registerMessageArea, 'An unexpected error occurred.', true);
+            } finally {
+                hideLoader();
+            }
+        });
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value,
+            };
+            
+            showLoader();
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    // Redirect to profile on successful login
+                    window.location.href = `/profile/${result.user_id}`;
+                } else {
+                    showMessage(loginMessageArea, result.message, true);
+                }
+            } catch (error) {
+                showMessage(loginMessageArea, 'An unexpected error occurred.', true);
+            } finally {
+                hideLoader();
+            }
+        });
+    </script>
+</body>
+</html>
+
