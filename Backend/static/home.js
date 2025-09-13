@@ -105,30 +105,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Show debug output above the calendar
         let debugDiv = document.getElementById('calendar-debug');
-        
-        
-       
 
         const dayCells = calendarGrid.querySelectorAll('.day-cell');
+        console.log('Home highlightData:', highlightData);
         console.log(`Home: Found ${dayCells.length} day cells`);
         dayCells.forEach(cell => {
             const day = parseInt(cell.dataset.day, 10);
-            // Remove previous highlight classes
             cell.classList.remove('has-both', 'has-pending', 'has-completed');
-            if (highlightData.pending && highlightData.completed) {
-                // New API format with pending/completed arrays
-                if (highlightData.pending.includes(day) && highlightData.completed.includes(day)) {
-                    cell.classList.add('has-both'); // Both pending and completed
-                } else if (highlightData.pending.includes(day)) {
-                    cell.classList.add('has-pending'); // Not done: light color
-                } else if (highlightData.completed.includes(day)) {
-                    cell.classList.add('has-completed'); // Done: dark color
+            let isPending = false, isCompleted = false;
+            if (highlightData && typeof highlightData === 'object' && !Array.isArray(highlightData)) {
+                // New backend format: { 1: {hasPending: true, hasCompleted: false}, ... }
+                if (highlightData[day]) {
+                    isPending = !!highlightData[day].hasPending;
+                    isCompleted = !!highlightData[day].hasCompleted;
                 }
+            } else if (highlightData && highlightData.pending && highlightData.completed) {
+                isPending = highlightData.pending.includes(day);
+                isCompleted = highlightData.completed.includes(day);
             } else if (Array.isArray(highlightData)) {
-                // Old API format with simple array
-                if (highlightData.includes(day)) {
-                    cell.classList.add('has-pending');
-                }
+                isPending = highlightData.includes(day);
+            }
+            if (isPending && isCompleted) {
+                cell.classList.add('has-both');
+                console.log(`Day ${day}: has-both`);
+            } else if (isPending) {
+                cell.classList.add('has-pending');
+                console.log(`Day ${day}: has-pending`);
+            } else if (isCompleted) {
+                cell.classList.add('has-completed');
+                console.log(`Day ${day}: has-completed`);
             }
         });
     };

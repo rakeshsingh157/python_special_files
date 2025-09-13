@@ -39,10 +39,10 @@ def get_today_tasks():
 
 @home_bp.route("/api/events/month_view")
 def get_events_for_month():
-    """Fetches the distinct days that have unfinished tasks for a given month and year."""
+    """Fetches the days with pending and/or completed tasks for a given month and year."""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
-        
+
     user_id = session['user_id']
     year = request.args.get('year')
     month = request.args.get('month')
@@ -56,37 +56,23 @@ def get_events_for_month():
 
     try:
         cursor = conn.cursor(dictionary=True)
-        
-        # Query 1: Get days with at least one PENDING task
-        pending_query = """
-            SELECT DISTINCT DAY(STR_TO_DATE(date, '%Y-%m-%d')) as event_day 
-            FROM events 
-            WHERE user_id = %s AND done = FALSE
-            AND YEAR(STR_TO_DATE(date, '%Y-%m-%d')) = %s 
-            AND MONTH(STR_TO_DATE(date, '%Y-%m-%d')) = %s
-        """
-        cursor.execute(pending_query, (user_id, year, month))
-        pending_days = [row['event_day'] for row in cursor.fetchall()]
+        date_pattern = f"{year}-{int(month):02d}-%"
+        cursor.execute("SELECT date, done FROM events WHERE user_id = %s AND date LIKE %s", (user_id, date_pattern))
+        events = cursor.fetchall()
 
-        # Query 2: Get days that ONLY have COMPLETED tasks
-        completed_query = """
-            SELECT DAY(STR_TO_DATE(date, '%Y-%m-%d')) as event_day
-            FROM events
-            WHERE user_id = %s
-              AND YEAR(STR_TO_DATE(date, '%Y-%m-%d')) = %s
-              AND MONTH(STR_TO_DATE(date, '%Y-%m-%d')) = %s
-            GROUP BY date
-            HAVING SUM(CASE WHEN done = FALSE THEN 1 ELSE 0 END) = 0
-        """
-        cursor.execute(completed_query, (user_id, year, month))
-        completed_days = [row['event_day'] for row in cursor.fetchall() if row['event_day'] not in pending_days]
-        
-        return jsonify({
-            "pending": pending_days,
-            "completed": completed_days
-        })
-    except Error as e:
-        return jsonify({"error": str(e)}), 500
+        events_by_day = {}
+        for event in events:
+            day = int(event['date'].split('-')[2])
+            if day not in events_by_day:
+                events_by_day[day] = {'hasPending': False, 'hasCompleted': False}
+            if event['done']:
+                events_by_day[day]['hasCompleted'] = True
+            else:
+                events_by_day[day]['hasPending'] = True
+
+        return jsonify(events_by_day)
+    except Exception as err:
+        return jsonify({"error": str(err)}), 500
     finally:
         if conn and conn.is_connected():
             cursor.close()

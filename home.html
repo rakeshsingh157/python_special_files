@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan Your Work!!</title>
    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   <style>
+
+   .day-cell.has-pending {
+    background-color: #e884da42;
+    color: var(--pink-main);
+    font-weight: 600;
+    border: 2px solid var(--pink-light);
+}
+.day-cell.has-completed {
+    background-color: #a084e880;
+    color: var(--white);
+    font-weight: 600;
+    border: 2px solid var(--purple-main);
+}
+.day-cell.today {
+        background: #a084e8;
+        color: #fff;
+        font-weight: bold;
+        box-shadow: 0 2px 8px rgba(160, 132, 232, 0.5);
+    }
+    .day-cell.has-both {
+    background: linear-gradient(135deg, var(--pink-light) 0%, var(--purple-light) 50%, var(--purple-main) 100%);
+    color: var(--purple-main);
+    font-weight: 600;
+    border: 2px solid var(--purple-main);
+}
+   </style>
 </head>
 <body>
     <div class="dashboard-container">

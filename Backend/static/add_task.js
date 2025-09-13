@@ -185,8 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const dayCells = calendarGrid.querySelectorAll('.day-cell');
         dayCells.forEach(cell => {
             const day = parseInt(cell.dataset.day, 10);
+            cell.classList.remove('has-both', 'has-pending', 'has-completed');
             if (highlightData.pending && highlightData.completed) {
-                // New API format with pending/completed arrays
                 if (highlightData.pending.includes(day) && highlightData.completed.includes(day)) {
                     cell.classList.add('has-both');
                 } else if (highlightData.pending.includes(day)) {
@@ -195,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     cell.classList.add('has-completed');
                 }
             } else if (Array.isArray(highlightData)) {
-                // Old API format with simple array
                 if (highlightData.includes(day)) {
                     cell.classList.add('has-pending');
                 }

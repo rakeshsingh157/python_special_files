@@ -1,21 +1,21 @@
 /* Calendar highlight for Home page */
 .day-cell.has-pending {
     background-color: var(--pink-light);
-    color: #fefaff; /* Darker pink text for better contrast */
+    color: var(--pink-main);
     font-weight: 600;
-    border: 2px solid #f8b6d6; /* Light border to make it more visible */
+    border: 2px solid var(--pink-light);
 }
 .day-cell.has-completed {
-    background-color: #ea0072;
-    color: #ffffff; /* White text for maximum contrast */
+    background-color: var(--purple-main);
+    color: var(--white);
     font-weight: 600;
-    border: 2px solid #ea0072; /* Slightly lighter border */
+    border: 2px solid var(--purple-main);
 }
 .day-cell.has-both {
-    background: linear-gradient(135deg, #fff2f8 0%, #f0e6ff 50%, #4a2c7a 100%); /* Light to dark gradient */
-    color: #e2d0ff; /* Dark text for readability */
+    background: linear-gradient(135deg, var(--pink-light) 0%, var(--purple-light) 50%, var(--purple-main) 100%);
+    color: var(--purple-main);
     font-weight: 600;
-    border: 2px solid #766996f5; /* Purple border */
+    border: 2px solid var(--purple-main);
 }
 /* General & Layout */
 :root {

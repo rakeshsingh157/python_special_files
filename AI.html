@@ -519,30 +519,31 @@
             font-weight: bold;
         }
 
-        .day-cell.today {
-            background: var(--pink-light);
-            color: var(--pink-main);
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(248, 182, 214, 0.5);
-        }
+       
         
         .day-cell.has-pending {
-             background-color: #fff2f8; /* Very light pink for pending tasks */
-             color: #e76ba2; /* Darker pink text for better contrast */
-             font-weight: 600;
-             border: 2px solid #f8b6d6; /* Light border to make it more visible */
-        }
-        .day-cell.has-completed {
-            background-color: #4a2c7a; /* Dark purple for completed tasks */
-            color: #ffffff; /* White text for maximum contrast */
-            font-weight: 600;
-            border: 2px solid #6b46a3; /* Slightly lighter border */
-        }
+    background-color: #e884da42;
+    color: var(--pink-main);
+    font-weight: 600;
+    border: 2px solid var(--pink-light);
+}
+       .day-cell.has-completed {
+    background-color: #a084e880;
+    color: var(--white);
+    font-weight: 600;
+    border: 2px solid var(--purple-main);
+}
+.day-cell.today {
+        background: #a084e8;
+        color: #fff;
+        font-weight: bold;
+        box-shadow: 0 2px 8px rgba(160, 132, 232, 0.5);
+    }
         .day-cell.has-both {
-            background: linear-gradient(135deg, #fff2f8 0%, #f0e6ff 50%, #4a2c7a 100%); /* Light to dark gradient */
-            color: #4a2c7a; /* Dark text for readability */
-            font-weight: 600;
-            border: 2px solid #a084e8; /* Purple border */
+              background: linear-gradient(135deg, var(--pink-light) 0%, var(--purple-light) 50%, var(--purple-main) 100%);
+              color: var(--purple-main);
+              font-weight: 600;
+              border: 2px solid var(--purple-main);
         }
         
         /* Simple loading spinner */
