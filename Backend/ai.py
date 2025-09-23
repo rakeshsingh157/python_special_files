@@ -6,7 +6,7 @@ from ai_scheduler import AIScheduler
 
 ai_bp = Blueprint('ai', __name__)
 
-DB_HOST = "photostore.ct0go6um6tj0.ap-south-1.rds.amazonaws.com"
+DB_HOST = "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com"
 DB_USER = "admin"
 DB_PASSWORD = "DBpicshot"
 DB_DATABASE = "eventsreminder"

@@ -3,7 +3,7 @@ from datetime import datetime
 
 # Database configuration details
 DB_CONFIG = {
-    "host": "photostore.ct0go6um6tj0.ap-south-1.rds.amazonaws.com",
+    "host": "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com",
     "user": "admin",
     "password": "DBpicshot",
     "database": "eventsreminder",

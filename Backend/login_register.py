@@ -7,7 +7,7 @@ import uuid
 auth_bp = Blueprint('auth', __name__)
 
 # --- Database Configuration ---
-DB_HOST = "photostore.ct0go6um6tj0.ap-south-1.rds.amazonaws.com"
+DB_HOST = "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com"
 DB_USER = "admin"
 DB_PASSWORD = "DBpicshot"
 DB_DATABASE = "eventsreminder"
@@ -27,7 +27,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id varchar(255) not null UNIQUE,
-            photo_url VARCHAR(255) DEFAULT 'https://i.ibb.co/68XqnN2/default-avatar.png',
+            photo_url VARCHAR(255),
             profile_bio VARCHAR(255) DEFAULT 'Productivity enthusiast and UI/UX designer.',
             username VARCHAR(255) NOT NULL,
             email VARCHAR(255) UNIQUE NOT NULL,
