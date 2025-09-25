@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(url, options);
         if (response.status === 401) {
             window.location.href = '/';
+            
             return null;
         }
         return response;
