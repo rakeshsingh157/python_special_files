@@ -1,15 +1,19 @@
-
 from flask import Blueprint, request, jsonify, session
 import mysql.connector
 from mysql.connector import Error
 from ai_scheduler import AIScheduler
+from config import Config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ai_bp = Blueprint('ai', __name__)
 
-DB_HOST = "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com"
-DB_USER = "admin"
-DB_PASSWORD = "DBpicshot"
-DB_DATABASE = "eventsreminder"
+# --- Database Configuration from Environment Variables ---
+DB_HOST = Config.DB_HOST
+DB_USER = Config.DB_USER
+DB_PASSWORD = Config.DB_PASSWORD
+DB_DATABASE = Config.DB_DATABASE
 
 def get_db_connection():
     try:
@@ -25,7 +29,7 @@ def get_db_connection():
 
 ai_scheduler = AIScheduler()
 
-@ai_bp.route('/api/ai/generate-schedule', methods=['POST'])
+@ai_bp.route('/api/<user_id>/ai/generate-schedule', methods=['POST'])
 def generate_schedule():
     if 'user_id' not in session:
         return jsonify({'message': 'Not logged in'}), 401

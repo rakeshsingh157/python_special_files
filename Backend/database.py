@@ -1,13 +1,17 @@
 import mysql.connector
+import os
 from datetime import datetime
+from dotenv import load_dotenv
 
-# Database configuration details
+load_dotenv()
+
+# Database configuration details from environment variables
 DB_CONFIG = {
-    "host": "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com",
-    "user": "admin",
-    "password": "DBpicshot",
-    "database": "eventsreminder",
-    "use_pure": True
+    "host": os.getenv("DB_HOST"),
+    "user": os.getenv("DB_USER"), 
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME"),
+    "use_pure": bool(os.getenv("USE_PURE", True))
 }
 
 def get_db_connection():

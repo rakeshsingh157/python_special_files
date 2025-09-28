@@ -3,14 +3,18 @@ import mysql.connector
 from mysql.connector import Error
 from bcrypt import hashpw, gensalt, checkpw
 import uuid
+from config import Config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 auth_bp = Blueprint('auth', __name__)
 
-# --- Database Configuration ---
-DB_HOST = "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com"
-DB_USER = "admin"
-DB_PASSWORD = "DBpicshot"
-DB_DATABASE = "eventsreminder"
+# --- Database Configuration from Environment Variables ---
+DB_HOST = Config.DB_HOST
+DB_USER = Config.DB_USER
+DB_PASSWORD = Config.DB_PASSWORD
+DB_DATABASE = Config.DB_DATABASE
 
 # --- Database Initialization ---
 def init_db():
@@ -96,6 +100,7 @@ def register_user():
         )
         conn.commit()
         return jsonify({'message': 'User registered successfully!'}), 201
+        
     except mysql.connector.Error as err:
         conn.rollback()
         return jsonify({'message': f'Registration failed: {err}'}), 500
@@ -121,7 +126,7 @@ def login_user():
 
         if user and checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
             session['user_id'] = user['user_id']
-            return jsonify({'message': 'Login successful'}), 200
+            return jsonify({'message': 'Login successful', 'user_id': user['user_id']}), 200
         else:
             return jsonify({'message': 'Invalid email or password.'}), 401
     except mysql.connector.Error as err:
@@ -134,4 +139,3 @@ def login_user():
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logged out successfully'}), 200
-

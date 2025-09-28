@@ -56,7 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isTyping) {
             messageBubble.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
         } else {
-            messageBubble.textContent = text;
+            // Convert markdown to HTML for better formatting
+            const htmlContent = convertMarkdownToHtml(text);
+            messageBubble.innerHTML = htmlContent;
         }
 
         if (isError) {
@@ -67,6 +69,38 @@ document.addEventListener('DOMContentLoaded', () => {
         chatWindow.appendChild(messageBubble);
         chatWindow.scrollTop = chatWindow.scrollHeight;
         return messageBubble;
+    };
+
+    // Function to convert basic markdown to HTML
+    const convertMarkdownToHtml = (text) => {
+        let html = text;
+        
+        // Convert **bold** to <strong>
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Convert *italic* to <em>
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Convert `code` to <code>
+        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+        
+        // Convert line breaks
+        html = html.replace(/\\n\\n/g, '<br><br>');
+        html = html.replace(/\\n/g, '<br>');
+        html = html.replace(/\n\n/g, '<br><br>');
+        html = html.replace(/\n/g, '<br>');
+        
+        // Convert bullet points (- or *)
+        html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        
+        // Convert numbered lists
+        html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+        
+        // Handle emojis and preserve spacing
+        html = html.replace(/  /g, '&nbsp;&nbsp;');
+        
+        return html;
     };
     
     // --- Calendar Logic ---

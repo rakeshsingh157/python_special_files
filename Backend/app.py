@@ -13,12 +13,18 @@ from ai_assistant import ai_assistant_bp
 from home_routes import home_bp
 from tasks import tasks_bp
 from schedule import schedule_bp
+from config import Config
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# Validate configuration
+Config.validate_config()
 
 # Create the Flask application instance
 app = Flask(__name__)
 app = Flask(__name__, template_folder='../', static_folder='static')
-app.secret_key = os.urandom(24)
+app.secret_key = Config.SECRET_KEY or os.urandom(24)
 
 
 
@@ -80,6 +86,6 @@ def collaboration_page():
 
 # --- Main entry point ---
 if __name__ == "__main__":
-    init_db()
+    init_db()  # Re-enable database initialization
     app.run(debug=True)
 

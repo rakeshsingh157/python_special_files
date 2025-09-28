@@ -1439,3 +1439,70 @@ body {
     background-color: #8c6fe5;
     transform: scale(1.05);
 }
+
+/* Enhanced AI Message Formatting Styles */
+.ai-message-bubble strong {
+    font-weight: 700;
+    color: var(--purple-main);
+}
+
+.ai-message-bubble em {
+    font-style: italic;
+    color: var(--dark-text);
+    opacity: 0.85;
+}
+
+.ai-message-bubble code {
+    background-color: rgba(160, 132, 232, 0.1);
+    color: var(--purple-main);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    border: 1px solid rgba(160, 132, 232, 0.2);
+}
+
+.ai-message-bubble ul {
+    margin: 10px 0;
+    padding-left: 20px;
+    list-style-type: none;
+}
+
+.ai-message-bubble ul li {
+    margin: 5px 0;
+    position: relative;
+    padding-left: 10px;
+}
+
+.ai-message-bubble ul li:before {
+    content: "•";
+    color: var(--purple-main);
+    font-weight: bold;
+    position: absolute;
+    left: -10px;
+}
+
+.ai-message-bubble ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.ai-message-bubble ol li {
+    margin: 5px 0;
+    color: var(--dark-text);
+}
+
+.ai-message-bubble br {
+    line-height: 1.6;
+}
+
+/* Better spacing and line height for formatted text */
+.ai-message-bubble {
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+/* Style for emoji spacing */
+.ai-message-bubble {
+    white-space: pre-line;
+}

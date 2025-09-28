@@ -2,14 +2,18 @@ from flask import Blueprint, request, jsonify, session
 import mysql.connector
 from mysql.connector import Error
 from bcrypt import hashpw, gensalt, checkpw
+from config import Config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 profile_bp = Blueprint('profile', __name__)
 
-# --- Database Configuration ---
-DB_HOST = "database-1.chcyc88wcx2l.eu-north-1.rds.amazonaws.com"
-DB_USER = "admin"
-DB_PASSWORD = "DBpicshot"
-DB_DATABASE = "eventsreminder"
+# --- Database Configuration from Environment Variables ---
+DB_HOST = Config.DB_HOST
+DB_USER = Config.DB_USER
+DB_PASSWORD = Config.DB_PASSWORD
+DB_DATABASE = Config.DB_DATABASE
 
 def get_db_connection():
     try:
