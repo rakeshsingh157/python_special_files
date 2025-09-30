@@ -10,7 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
 
     // --- GLOBAL STATE ---
-    let calendarDate = new Date();
+    // --- IST TIMEZONE UTILITIES ---
+    const getISTDate = () => {
+        const now = new Date();
+        // Convert to IST (+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // UTC time
+        return new Date(utc + istOffset);
+    };
+    
+    let calendarDate = getISTDate();
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     // --- API HELPER ---
@@ -69,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderCalendar = async () => {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth(); // 0-indexed
-        const today = new Date();
+        const today = getISTDate();
 
         // Update header and illustration
         currentMonthEl.textContent = `${monthNames[month]} ${year}`;
@@ -150,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     todayBtn.addEventListener('click', () => {
-        calendarDate = new Date();
+        calendarDate = getISTDate();
         renderCalendar();
     });
     

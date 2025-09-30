@@ -16,8 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- GLOBAL STATE ---
     let allTasks = [];
-    let selectedDate = new Date();
-    let calendarDate = new Date();
+    
+    // --- IST TIMEZONE UTILITIES ---
+    const getISTDate = () => {
+        const now = new Date();
+        // Convert to IST (+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // UTC time
+        return new Date(utc + istOffset);
+    };
+    
+    let selectedDate = getISTDate();
+    let calendarDate = getISTDate();
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const icons = { 'work': '💼', 'home': '🏠', 'sports': '⚽', 'fun': '🎉', 'health': '🩺', 'fitness': '💪', 'personal': '👤', 'learning': '📚', 'finance': '💰', 'errands': '🛒', 'cleaning': '🧹', 'gardening': '🌱', 'cooking': '🍳', 'pets': '🐾', 'meeting': '🤝', 'commute': '🚗', 'networking': '🔗', 'admin': '📝', 'social': '🥳', 'entertainment': '🍿', 'travel': '✈️', 'hobby': '🎨', 'volunteering': '❤️', 'important': '❗️', 'to-do': '✅', 'later': '⏳', 'family': '👨‍👩‍👧‍👦' };
 
@@ -33,12 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DATE & TIME HELPERS ---
     const formatDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        // Ensure we're working with IST date
+        const istDate = date instanceof Date ? date : getISTDate();
+        const year = istDate.getFullYear();
+        const month = String(istDate.getMonth() + 1).padStart(2, '0');
+        const day = String(istDate.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
-    const getDayName = (date, length = 'short') => date.toLocaleDateString('en-US', { weekday: length });
+    const getDayName = (date, length = 'short') => {
+        const istDate = date instanceof Date ? date : getISTDate();
+        return istDate.toLocaleDateString('en-IN', { weekday: length, timeZone: 'Asia/Kolkata' });
+    };
 
     // --- MAIN RENDER FUNCTION ---
     const renderPageContent = () => {
@@ -74,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderTasksForSelectedDate = () => {
         const selectedDateStr = formatDate(selectedDate);
-        const todayStr = formatDate(new Date());
+        const todayStr = formatDate(getISTDate());
         const pendingTasks = allTasks.filter(task => !task.done);
 
         if (selectedDateStr === todayStr) {
@@ -177,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderCalendar = async () => {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth();
-        const today = new Date();
+        const today = getISTDate();
         currentMonthEl.textContent = `${monthNames[month]} ${year}`;
         calendarDateDisplay.innerHTML = `<span class="month">${monthNames[today.getMonth()]}</span><span class="day-number">${today.getDate()}</span>`;
         const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -276,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     prevMonthBtn.addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderCalendar(); });
     nextMonthBtn.addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderCalendar(); });
-    todayBtn.addEventListener('click', () => { calendarDate = new Date(); renderCalendar(); });
+    todayBtn.addEventListener('click', () => { calendarDate = getISTDate(); renderCalendar(); });
     if(logoutBtn) logoutBtn.addEventListener('click', async () => { await fetch('/logout', { method: 'POST' }); window.location.href = '/'; });
 
     // --- NEW SCROLL LOGIC FOR THE "ADD TASK" BUTTON ---

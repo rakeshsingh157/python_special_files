@@ -5,7 +5,11 @@ import json
 import re
 import requests
 from datetime import datetime, timedelta
+import pytz
 import cohere
+
+# Configure IST timezone
+IST = pytz.timezone('Asia/Kolkata')
 
 load_dotenv()
 
@@ -29,8 +33,8 @@ class AIScheduler:
         # Cohere API setup (second fallback)
         self.cohere_api_key = os.getenv("COHERE_API_KEY")
         if self.cohere_api_key:
-            self.co = cohere.ClientV2(self.cohere_api_key)
-            self.cohere_model = "command-r-plus-08-2024"  # Latest Cohere model
+            self.co = cohere.Client(self.cohere_api_key)
+            self.cohere_model = "command-a-03-2025"  # Latest Cohere model
         else:
             self.co = None
         
@@ -116,7 +120,7 @@ class AIScheduler:
                 raise Exception(f"Cohere API request failed: {str(e)}")
     
     def generate_tasks(self, user_input):
-        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M")
+        current_datetime = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
         
         prompt = f"""
         Analyze the following user input and generate a list of tasks with specific details.
@@ -134,6 +138,22 @@ class AIScheduler:
                 "reminder_setting": "15 minutes"
             }}
         ]
+        
+        SMART TIME AND REMINDER GENERATION:
+        **When NO specific time mentioned, generate appropriate times by activity type:**
+        - Morning activities (workout, jogging, breakfast): "07:00", "08:00"
+        - Work meetings/tasks: "09:00", "10:00", "14:00", "15:00"
+        - Errands (shopping, appointments): "10:00", "11:00", "16:00"
+        - Evening activities (cooking, family time): "18:00", "19:00"
+        - Study/learning/personal: "20:00", "21:00"
+        
+        **When NO reminder specified, choose smart defaults:**
+        - Important meetings/appointments: "30 minutes" or "1 hour"
+        - Daily routines (workout, meals): "15 minutes"
+        - Deadlines/urgent tasks: "2 hours" or "1 day"
+        - Casual activities: "15 minutes"
+        
+        **Available reminder options:** "15 minutes", "30 minutes", "1 hour", "2 hours", "1 day"
         
         CATEGORY GUIDELINES:
         - "meeting" for meetings, calls, appointments
@@ -159,7 +179,7 @@ class AIScheduler:
         
         Rules:
         1. Extract or infer dates and times from the input
-        2. If no specific date is mentioned, use today's date: {datetime.now().strftime('%Y-%m-%d')}
+        2. If no specific date is mentioned, use today's date: {datetime.now(IST).strftime('%Y-%m-%d')}
         3. If no specific time is mentioned, use a reasonable time like "09:00"
         4. Choose the most appropriate category from the allowed list
         5. Generate at least 1 task and at most 5 tasks
@@ -176,7 +196,7 @@ class AIScheduler:
                 raise Exception("Gemini API key not configured")
             
             # Use faster model to conserve quota
-            model = genai.GenerativeModel('gemini-2.0-flash')  # Faster, more quota-friendly
+            model = genai.GenerativeModel('gemini-1.5-pro')  # Working, stable model
             response = model.generate_content(prompt)
             response_text = response.text
             print("Successfully used Gemini API for task generation")
@@ -207,14 +227,35 @@ class AIScheduler:
                     
                 except Exception as groq_error:
                     print(f"All APIs failed. Gemini: {gemini_error}, Cohere: {cohere_error}, Groq: {groq_error}")
-                    # Return a default task if all APIs fail
+                    # Return a default task with smart time generation
+                    default_time = "09:00"
+                    default_reminder = "15 minutes"
+                    
+                    # Generate smarter defaults based on user input
+                    user_lower = user_input.lower()
+                    if any(word in user_lower for word in ['workout', 'gym', 'exercise', 'jog', 'run']):
+                        default_time = "07:00"
+                        default_reminder = "15 minutes"
+                    elif any(word in user_lower for word in ['meeting', 'appointment', 'call']):
+                        default_time = "10:00"
+                        default_reminder = "30 minutes"
+                    elif any(word in user_lower for word in ['cook', 'dinner', 'lunch', 'meal']):
+                        default_time = "18:00"
+                        default_reminder = "15 minutes"
+                    elif any(word in user_lower for word in ['study', 'learn', 'read']):
+                        default_time = "20:00"
+                        default_reminder = "15 minutes"
+                    elif any(word in user_lower for word in ['shop', 'buy', 'errand']):
+                        default_time = "11:00"
+                        default_reminder = "30 minutes"
+                    
                     return [{
                         "title": "Complete your task",
-                        "description": user_input,
+                        "description": f"Task based on: {user_input}. Complete this activity at the scheduled time.",
                         "category": "personal",
-                        "date": datetime.now().strftime('%Y-%m-%d'),
-                        "time": "09:00",
-                        "reminder_setting": "15 minutes"
+                        "date": datetime.now(IST).strftime('%Y-%m-%d'),
+                        "time": default_time,
+                        "reminder_setting": default_reminder
                     }]
         
         # Extract JSON from response
@@ -235,24 +276,66 @@ class AIScheduler:
                         
                 return tasks
             else:
-                # Fallback if JSON parsing fails
+                # Fallback if JSON parsing fails - use smart defaults
+                default_time = "09:00"
+                default_reminder = "15 minutes"
+                
+                # Generate smarter defaults based on user input
+                user_lower = user_input.lower()
+                if any(word in user_lower for word in ['workout', 'gym', 'exercise', 'jog', 'run']):
+                    default_time = "07:00"
+                    default_reminder = "15 minutes"
+                elif any(word in user_lower for word in ['meeting', 'appointment', 'call']):
+                    default_time = "10:00"
+                    default_reminder = "30 minutes"
+                elif any(word in user_lower for word in ['cook', 'dinner', 'lunch', 'meal']):
+                    default_time = "18:00"
+                    default_reminder = "15 minutes"
+                elif any(word in user_lower for word in ['study', 'learn', 'read']):
+                    default_time = "20:00"
+                    default_reminder = "15 minutes"
+                elif any(word in user_lower for word in ['shop', 'buy', 'errand']):
+                    default_time = "11:00"
+                    default_reminder = "30 minutes"
+                
                 return [{
                     "title": "Complete your task",
-                    "description": user_input,
+                    "description": f"Task based on: {user_input}. Complete this activity at the scheduled time.",
                     "category": "personal",
-                    "date": datetime.now().strftime('%Y-%m-%d'),
-                    "time": "09:00",
-                    "reminder_setting": "15 minutes"
+                    "date": datetime.now(IST).strftime('%Y-%m-%d'),
+                    "time": default_time,
+                    "reminder_setting": default_reminder
                 }]
                 
         except Exception as parse_error:
             print(f"Error parsing JSON response: {parse_error}")
-            # Return a default task if JSON parsing fails
+            # Return a default task with smart defaults based on user input
+            default_time = "09:00"
+            default_reminder = "15 minutes"
+            
+            # Generate smarter defaults based on user input
+            user_lower = user_input.lower()
+            if any(word in user_lower for word in ['workout', 'gym', 'exercise', 'jog', 'run']):
+                default_time = "07:00"
+                default_reminder = "15 minutes"
+            elif any(word in user_lower for word in ['meeting', 'appointment', 'call']):
+                default_time = "10:00"
+                default_reminder = "30 minutes"
+            elif any(word in user_lower for word in ['cook', 'dinner', 'lunch', 'meal']):
+                default_time = "18:00"
+                default_reminder = "15 minutes"
+            elif any(word in user_lower for word in ['study', 'learn', 'read']):
+                default_time = "20:00"
+                default_reminder = "15 minutes"
+            elif any(word in user_lower for word in ['shop', 'buy', 'errand']):
+                default_time = "11:00"
+                default_reminder = "30 minutes"
+            
             return [{
                 "title": "Complete your task",
-                "description": user_input,
+                "description": f"Task based on: {user_input}. Complete this activity at the scheduled time.",
                 "category": "personal",
-                "date": datetime.now().strftime('%Y-%m-%d'),
-                "time": "09:00",
-                "reminder": "15 minutes"
+                "date": datetime.now(IST).strftime('%Y-%m-%d'),
+                "time": default_time,
+                "reminder": default_reminder
             }]

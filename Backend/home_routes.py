@@ -2,6 +2,10 @@ from flask import Blueprint , jsonify, session, request
 from database import get_db_connection
 from mysql.connector import Error
 from datetime import datetime
+import pytz
+
+# Configure IST timezone
+IST = pytz.timezone('Asia/Kolkata')
 
 # This can be a new Blueprint or part of your main app
 home_bp = Blueprint('home', __name__)
@@ -13,7 +17,7 @@ def get_today_tasks():
         return jsonify({"error": "Unauthorized"}), 401
     
     user_id = session['user_id']
-    today_date = datetime.now().strftime('%Y-%m-%d')
+    today_date = datetime.now(IST).strftime('%Y-%m-%d')
     
     conn = get_db_connection()
     if not conn:

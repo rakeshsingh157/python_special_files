@@ -8,7 +8,11 @@ import google.generativeai as genai
 from database import get_db_connection # Make sure you can import your DB connection
 from mysql.connector import Error
 from datetime import datetime, timedelta
+import pytz
 from groq import Groq
+
+# Configure IST timezone
+IST = pytz.timezone('Asia/Kolkata')
 
 load_dotenv()
 
@@ -42,7 +46,7 @@ def detect_and_create_events(user_message, user_id):
     """
     
     # First, use AI to determine if this message contains events
-    today = datetime.now().strftime('%A, %Y-%m-%d')
+    today = datetime.now(IST).strftime('%A, %Y-%m-%d')
     
     detection_prompt = f"""
     You are an AI assistant that determines if a user message contains calendar events or event operations.
@@ -73,42 +77,45 @@ def detect_and_create_events(user_message, user_id):
     event_detection_result = None
     
     try:
-        # Try Groq first (fastest and working model)
-        if groq_client:
-            response = groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": detection_prompt}],
-                max_tokens=20,
-                temperature=0.1
-            )
-            event_detection_result = response.choices[0].message.content.strip()
-            print(f"Groq detection result: {event_detection_result}")
-    except Exception as groq_error:
-        print(f"Groq detection failed: {groq_error}")
+        # Try Gemini first (primary AI)
+        if api_key:
+            model = genai.GenerativeModel('gemini-1.5-pro')  # Using working model
+            response = model.generate_content(detection_prompt)
+            event_detection_result = response.text.strip()
+            print(f"Gemini detection result: {event_detection_result}")
+    except Exception as gemini_error:
+        print(f"Gemini detection failed: {gemini_error}")
         
         try:
             # Fallback to Cohere
             if co:
-                response = co.generate(
-                    model='command-r-plus',
-                    prompt=detection_prompt,
+                response = co.chat(
+                    model='command-a-03-2025',
+                    message=detection_prompt,
                     max_tokens=20,
                     temperature=0.1
                 )
-                event_detection_result = response.generations[0].text.strip()
+                if hasattr(response, 'text'):
+                    event_detection_result = response.text.strip()
+                else:
+                    event_detection_result = str(response).strip()
                 print(f"Cohere detection result: {event_detection_result}")
         except Exception as cohere_error:
             print(f"Cohere detection failed: {cohere_error}")
             
             try:
-                # Final fallback to Gemini
-                if api_key:
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    response = model.generate_content(detection_prompt)
-                    event_detection_result = response.text.strip()
-                    print(f"Gemini detection result: {event_detection_result}")
-            except Exception as gemini_error:
-                print(f"All AI detection failed: {gemini_error}")
+                # Final fallback to Groq
+                if groq_client:
+                    response = groq_client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[{"role": "user", "content": detection_prompt}],
+                        max_tokens=20,
+                        temperature=0.1
+                    )
+                    event_detection_result = response.choices[0].message.content.strip()
+                    print(f"Groq detection result: {event_detection_result}")
+            except Exception as groq_error:
+                print(f"All AI detection failed: {groq_error}")
                 return False, "AI detection services unavailable"
     
     # If no events detected, check for deletion requests
@@ -125,7 +132,7 @@ def detect_and_create_events(user_message, user_id):
         You are an AI assistant that extracts event details from user messages.
         
         Today is {today}.
-        Current time: {datetime.now().strftime('%H:%M')}
+        Current time: {datetime.now(IST).strftime('%H:%M')}
         
         User message: "{user_message}"
         
@@ -147,7 +154,7 @@ def detect_and_create_events(user_message, user_id):
         - For school/learning events, use "09:00" as default
         
         DATE INTERPRETATION EXAMPLES:
-        - Current date: {datetime.now().strftime('%Y-%m-%d')} (September 29, 2025)
+        - Current date: {datetime.now(IST).strftime('%Y-%m-%d')} (September 29, 2025)
         this is only example
         - "on 1" → "2025-10-01" (October 1st)
         - "on 2" → "2025-10-02" (October 2nd)  
@@ -155,8 +162,8 @@ def detect_and_create_events(user_message, user_id):
         - "on 7" → "2025-10-07" (October 7th)
         - "on 15" → "2025-10-15" (October 15th)
         - "on 25" → "2025-10-25" (October 25th)
-        - "tomorrow" → {(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')}
-        - "today" → {datetime.now().strftime('%Y-%m-%d')}
+        - "tomorrow" → {(datetime.now(IST) + timedelta(days=1)).strftime('%Y-%m-%d')}
+        - "today" → {datetime.now(IST).strftime('%Y-%m-%d')}
         
         CRITICAL RULE: Match the EXACT day number from user input!
         
@@ -197,44 +204,47 @@ def detect_and_create_events(user_message, user_id):
         events_json = None
         
         try:
-            # Try Groq for extraction
-            if groq_client:
+            # Try Gemini for extraction
+            if api_key:
                 print(f"[DEBUG] Extraction prompt for '{user_message}':")
                 print(f"[DEBUG] Date interpretation should map 'on 5' to October 5th")
-                response = groq_client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=[{"role": "user", "content": extraction_prompt}],
-                    max_tokens=500,
-                    temperature=0.1
-                )
-                events_json = response.choices[0].message.content.strip()
-                print(f"Groq extraction result: {events_json}")
-        except Exception as groq_error:
-            print(f"Groq extraction failed: {groq_error}")
+                model = genai.GenerativeModel('gemini-2.0-flash')  # Using faster model
+                response = model.generate_content(extraction_prompt)
+                events_json = response.text.strip()
+                print(f"Gemini extraction result: {events_json}")
+        except Exception as gemini_error:
+            print(f"Gemini extraction failed: {gemini_error}")
             
             try:
                 # Fallback to Cohere for extraction
                 if co:
-                    response = co.generate(
-                        model='command-r-plus',
-                        prompt=extraction_prompt,
+                    response = co.chat(
+                        model='command-a-03-2025',
+                        message=extraction_prompt,
                         max_tokens=500,
                         temperature=0.1
                     )
-                    events_json = response.generations[0].text.strip()
+                    if hasattr(response, 'text'):
+                        events_json = response.text.strip()
+                    else:
+                        events_json = str(response).strip()
                     print(f"Cohere extraction result: {events_json}")
             except Exception as cohere_error:
                 print(f"Cohere extraction failed: {cohere_error}")
                 
                 try:
-                    # Final fallback to Gemini for extraction
-                    if api_key:
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        response = model.generate_content(extraction_prompt)
-                        events_json = response.text.strip()
-                        print(f"Gemini extraction result: {events_json}")
-                except Exception as gemini_error:
-                    print(f"All AI extraction failed: {gemini_error}")
+                    # Final fallback to Groq for extraction
+                    if groq_client:
+                        response = groq_client.chat.completions.create(
+                            model="llama-3.1-8b-instant",
+                            messages=[{"role": "user", "content": extraction_prompt}],
+                            max_tokens=500,
+                            temperature=0.1
+                        )
+                        events_json = response.choices[0].message.content.strip()
+                        print(f"Groq extraction result: {events_json}")
+                except Exception as groq_error:
+                    print(f"All AI extraction failed: {groq_error}")
                     return False, "AI extraction services unavailable"
         
         # Parse and save events
@@ -316,7 +326,7 @@ def handle_event_deletion(user_message, user_id):
     """
     Handles event deletion requests using AI to identify which events to delete.
     """
-    today = datetime.now().strftime('%A, %Y-%m-%d')
+    today = datetime.now(IST).strftime('%A, %Y-%m-%d')
     
     # First, get user's current events to help with deletion
     current_events = get_user_events_for_deletion(user_id)
@@ -333,7 +343,7 @@ def handle_event_deletion(user_message, user_id):
     You are an AI assistant that identifies which events to delete based on user requests.
     
     Today is {today}.
-    Current time: {datetime.now().strftime('%H:%M')}
+    Current time: {datetime.now(IST).strftime('%H:%M')}
     
     User message: "{user_message}"
     
@@ -368,71 +378,114 @@ def handle_event_deletion(user_message, user_id):
     deletion_analysis = None
     
     try:
-        # Try Groq first (fastest and working model)
-        if groq_client:
-            response = groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": deletion_prompt}],
-                max_tokens=500,
-                temperature=0.1
-            )
-            deletion_analysis = response.choices[0].message.content.strip()
-            print(f"Groq deletion analysis: {deletion_analysis}")
-    except Exception as groq_error:
-        print(f"Groq deletion analysis failed: {groq_error}")
+        # Try Gemini first (primary AI)
+        if api_key:
+            model = genai.GenerativeModel('gemini-1.5-pro')
+            response = model.generate_content(deletion_prompt)
+            deletion_analysis = response.text.strip()
+            print(f"Gemini deletion analysis: {deletion_analysis}")
+    except Exception as gemini_error:
+        print(f"Gemini deletion analysis failed: {gemini_error}")
         
         try:
-            # Fallback to Gemini
-            if api_key:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(deletion_prompt)
-                deletion_analysis = response.text.strip()
-                print(f"Gemini deletion analysis: {deletion_analysis}")
-        except Exception as gemini_error:
-            print(f"Gemini deletion analysis failed: {gemini_error}")
+            # Fallback to Cohere
+            if co:
+                response = co.chat(
+                    model='command-a-03-2025',
+                    message=deletion_prompt,
+                    max_tokens=500,
+                    temperature=0.1
+                )
+                if hasattr(response, 'text'):
+                    deletion_analysis = response.text.strip()
+                else:
+                    deletion_analysis = str(response).strip()
+                print(f"Cohere deletion analysis: {deletion_analysis}")
+        except Exception as cohere_error:
+            print(f"Cohere deletion analysis failed: {cohere_error}")
             
             try:
-                # Final fallback to Cohere
-                if co:
-                    response = co.generate(
-                        model='command-r-plus',
-                        prompt=deletion_prompt,
+                # Final fallback to Groq
+                if groq_client:
+                    response = groq_client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        messages=[{"role": "user", "content": deletion_prompt}],
                         max_tokens=500,
                         temperature=0.1
                     )
-                    deletion_analysis = response.generations[0].text.strip()
-                    print(f"Cohere deletion analysis: {deletion_analysis}")
-            except Exception as cohere_error:
-                print(f"All AI deletion analysis failed: {cohere_error}")
+                    deletion_analysis = response.choices[0].message.content.strip()
+                    print(f"Groq deletion analysis: {deletion_analysis}")
+            except Exception as groq_error:
+                print(f"All AI deletion analysis failed: {groq_error}")
                 return False, "AI deletion analysis services unavailable"
     
     # Parse deletion analysis
     if deletion_analysis:
         try:
-            # Extract JSON from response
-            json_start = deletion_analysis.find('{')
-            json_end = deletion_analysis.rfind('}') + 1
+            # Extract JSON from response - handle malformed JSON
+            clean_json = deletion_analysis
+            
+            # Remove markdown code blocks if present
+            if '```json' in clean_json:
+                json_start = clean_json.find('```json') + 7
+                json_end = clean_json.find('```', json_start)
+                if json_end != -1:
+                    clean_json = clean_json[json_start:json_end].strip()
+            elif '```' in clean_json:
+                json_start = clean_json.find('```') + 3
+                json_end = clean_json.find('```', json_start)
+                if json_end != -1:
+                    clean_json = clean_json[json_start:json_end].strip()
+            
+            # Find JSON boundaries
+            json_start = clean_json.find('{')
+            json_end = clean_json.rfind('}') + 1
             if json_start != -1 and json_end > json_start:
-                clean_json = deletion_analysis[json_start:json_end]
-                deletion_data = json.loads(clean_json)
+                clean_json = clean_json[json_start:json_end]
+            
+            # Fix common JSON issues
+            clean_json = clean_json.replace('\\n', ' ').replace('\\t', ' ')
+            
+            # Handle truncated JSON by finding the last complete object
+            if clean_json.count('{') > clean_json.count('}'):
+                # JSON is truncated, try to fix it
+                lines = clean_json.split('\n')
+                fixed_lines = []
+                brace_count = 0
                 
-                if 'delete_events' in deletion_data and deletion_data['delete_events']:
-                    deleted_count = 0
-                    deleted_titles = []
-                    
-                    for event_to_delete in deletion_data['delete_events']:
-                        event_id = event_to_delete.get('id')
-                        if event_id and delete_event_from_db(user_id, event_id):
-                            deleted_count += 1
-                            deleted_titles.append(event_to_delete.get('title', 'Unknown'))
-                    
-                    if deleted_count > 0:
-                        titles_text = ', '.join(deleted_titles)
-                        return True, f"✅ Successfully deleted {deleted_count} event(s): {titles_text}"
-                    else:
-                        return False, "Failed to delete events from database"
+                for line in lines:
+                    brace_count += line.count('{') - line.count('}')
+                    fixed_lines.append(line)
+                    if brace_count == 0:  # Complete JSON object
+                        break
+                
+                clean_json = '\\n'.join(fixed_lines)
+                
+                # Add missing closing braces
+                while brace_count > 0:
+                    clean_json += '}'
+                    brace_count -= 1
+            
+            print(f"Attempting to parse JSON: {clean_json[:200]}...")
+            deletion_data = json.loads(clean_json)
+            
+            if 'delete_events' in deletion_data and deletion_data['delete_events']:
+                deleted_count = 0
+                deleted_titles = []
+                
+                for event_to_delete in deletion_data['delete_events']:
+                    event_id = event_to_delete.get('id')
+                    if event_id and delete_event_from_db(user_id, event_id):
+                        deleted_count += 1
+                        deleted_titles.append(event_to_delete.get('title', 'Unknown'))
+                
+                if deleted_count > 0:
+                    titles_text = ', '.join(deleted_titles)
+                    return True, f"✅ Successfully deleted {deleted_count} event(s): {titles_text}"
                 else:
-                    return False, "No matching events found to delete"
+                    return False, "Failed to delete events from database"
+            else:
+                return False, "No matching events found to delete"
                     
         except json.JSONDecodeError as e:
             print(f"JSON parsing error in deletion: {e}")
@@ -629,13 +682,12 @@ def get_user_events_for_deletion(user_id):
         cursor = conn.cursor()
         
         # Get events from today onwards
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now(IST).strftime('%Y-%m-%d')
         query = """
         SELECT id, title, description, date, time, category 
         FROM events 
         WHERE user_id = %s AND date >= %s AND done = 0
         ORDER BY date, time
-        LIMIT 20
         """
         
         cursor.execute(query, (user_id, today))
@@ -1049,7 +1101,7 @@ def ai_test_no_auth():
                 "user_message": user_message,
                 "user_id": actual_user_id,
                 "test_mode": True,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(IST).isoformat()
             }
             
             if success:
@@ -1081,26 +1133,25 @@ def ai_test_no_auth():
 
 # --- HELPER FUNCTION TO GET SCHEDULE ---
 def _get_user_schedule(user_id):
-    """Fetches the user's upcoming events for the next 7 days from the database."""
+    """Fetches all the user's upcoming events from the database."""
     conn = get_db_connection()
     if not conn:
         return "Database connection failed."
     
     try:
         cursor = conn.cursor(dictionary=True)
-        # Get events from today onwards for the next 7 days
-        today = datetime.now().strftime('%Y-%m-%d')
-        end_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+        # Get all events from today onwards
+        today = datetime.now(IST).strftime('%Y-%m-%d')
         
-        query = "SELECT title, date, time FROM events WHERE user_id = %s AND date >= %s AND date <= %s AND done = FALSE ORDER BY date, time"
-        cursor.execute(query, (user_id, today, end_date))
+        query = "SELECT title, date, time FROM events WHERE user_id = %s AND date >= %s AND done = FALSE ORDER BY date, time"
+        cursor.execute(query, (user_id, today))
         events = cursor.fetchall()
         
         if not events:
-            return "The user's schedule for the next 7 days is clear."
+            return "The user's schedule is currently clear."
             
         # Format the events into a clean string for the AI
-        schedule_string = "Here is the user's schedule for the next 7 days:\n"
+        schedule_string = "Here is the user's complete schedule:\n"
         for event in events:
             schedule_string += f"- On {event['date']} at {event['time']}: {event['title']}\n"
         return schedule_string
@@ -1187,7 +1238,7 @@ def ai_chat_automatic():
         
         - Be concise, encouraging, and clear in your responses.
         - When asked to generate lists, always use markdown bullet points.
-        - Use the current date of {datetime.now().strftime('%A, %Y-%m-%d')} for any time-related questions.
+        - Use the current date of {datetime.now(IST).strftime('%A, %Y-%m-%d')} for any time-related questions.
         - You can handle multiple events in a single message automatically.
 
         ---
@@ -1199,8 +1250,44 @@ def ai_chat_automatic():
         # 5. Generate AI response with 3-tier fallback (Groq first since it's working)
         ai_response_text = None
         
-        # Try Groq first (fastest and currently working)
-        if groq_client:
+        # Try Gemini first (primary AI)
+        if api_key:
+            try:
+                model = genai.GenerativeModel('gemini-1.5-pro')
+                chat = model.start_chat(history=history)
+                response = chat.send_message(user_message)
+                ai_response_text = response.text
+                print("✓ Used Gemini API for chat response")
+            except Exception as e:
+                print(f"Gemini API failed: {e}")
+        
+        # Fallback to Cohere if Gemini fails
+        if not ai_response_text and co:
+            try:
+                # Prepare chat history for Cohere
+                cohere_messages = []
+                for msg in history:
+                    if msg['role'] == 'user':
+                        cohere_messages.append({"role": "user", "content": msg['parts'][0]['text']})
+                    elif msg['role'] == 'model':
+                        cohere_messages.append({"role": "assistant", "content": msg['parts'][0]['text']})
+                
+                response = co.chat(
+                    model='command-a-03-2025',
+                    message=f"{system_prompt}\n\nUser: {user_message}\n\nAssistant:",
+                    max_tokens=1000,
+                    temperature=0.3
+                )
+                if hasattr(response, 'text'):
+                    ai_response_text = response.text
+                else:
+                    ai_response_text = str(response)
+                print("✓ Used Cohere API as fallback for chat response")
+            except Exception as e:
+                print(f"Cohere API failed: {e}")
+        
+        # Final fallback to Groq if both fail
+        if not ai_response_text and groq_client:
             try:
                 # Convert history to Groq format
                 groq_messages = [{"role": "system", "content": system_prompt}]
@@ -1217,43 +1304,25 @@ def ai_chat_automatic():
                     max_tokens=1000
                 )
                 ai_response_text = chat_completion.choices[0].message.content
-                print("✓ Used Groq API for chat response")
+                print("✓ Used Groq API as final fallback for chat response")
             except Exception as e:
                 print(f"Groq API failed: {e}")
-        
-        # Fallback to Gemini if Groq fails
-        if not ai_response_text:
-            try:
-                if api_key:
-                    model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_prompt)
-                    chat = model.start_chat(history=history)
-                    response = chat.send_message(user_message)
-                    ai_response_text = response.text
-                    print("✓ Used Gemini API as fallback for chat response")
-            except Exception as e:
-                print(f"Gemini API failed: {e}")
-        
-        # Final fallback to Cohere if both fail
-        if not ai_response_text and co:
-            try:
-                # Prepare chat history for Cohere
-                cohere_messages = []
-                for msg in history:
-                    if msg['role'] == 'user':
-                        cohere_messages.append({"role": "user", "content": msg['parts'][0]['text']})
-                    elif msg['role'] == 'model':
-                        cohere_messages.append({"role": "assistant", "content": msg['parts'][0]['text']})
-                
-                response = co.generate(
-                    model='command-r-plus',
-                    prompt=f"{system_prompt}\n\nUser: {user_message}\n\nAssistant:",
-                    max_tokens=1000,
-                    temperature=0.3
-                )
-                ai_response_text = response.generations[0].text.strip()
-                print("✓ Used Cohere API as final fallback for chat response")
-            except Exception as e:
-                print(f"Cohere API failed: {e}")
+                try:
+                    # Try Cohere as final fallback
+                    if cohere_api_key:
+                        co_fallback = cohere.Client(cohere_api_key)
+                        response = co_fallback.chat(
+                            message=f"{system_prompt}\n\nUser: {user_message}",
+                            model="command-a-03-2025",
+                            temperature=0.3
+                        )
+                        if hasattr(response, 'text'):
+                            ai_response_text = response.text.strip()
+                        else:
+                            ai_response_text = str(response).strip()
+                        print("✓ Used Cohere API as final fallback for chat response")
+                except Exception as e:
+                    print(f"Cohere API failed: {e}")
         
         # If all APIs failed
         if not ai_response_text:

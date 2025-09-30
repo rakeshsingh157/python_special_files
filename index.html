@@ -355,8 +355,8 @@
                 });
                 const result = await response.json();
                 if (response.ok) {
-                    // Redirect to profile on successful login
-                    window.location.href = `/profile/${result.user_id}`;
+                    // Redirect to profile on successful login (no user ID in URL for security)
+                    window.location.href = '/profile';
                 } else {
                     showMessage(loginMessageArea, result.message, true);
                 }

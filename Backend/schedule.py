@@ -2,6 +2,10 @@ from flask import Blueprint, jsonify, session, request
 from database import get_db_connection
 from mysql.connector import Error
 from datetime import datetime
+import pytz
+
+# Configure IST timezone
+IST = pytz.timezone('Asia/Kolkata')
 
 schedule_bp = Blueprint('schedule', __name__)
 

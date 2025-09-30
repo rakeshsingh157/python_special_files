@@ -114,23 +114,23 @@ def get_personal_tasks():
     
     try:
         cursor = conn.cursor(dictionary=True)
-        # UPDATED QUERY: Use LEFT JOIN to get assigner's email for assigned tasks
+        # UPDATED QUERY: Only return tasks that were assigned TO the user by others (not self-created tasks)
         query = """
             SELECT
                 e.*,
                 assigner.email as assigner_email
             FROM
                 events e
-            LEFT JOIN
+            INNER JOIN
                 assigned_tasks at ON e.id = at.event_id
-            LEFT JOIN
+            INNER JOIN
                 users assigner ON at.assigner_id = assigner.user_id
             WHERE
-                e.user_id = %s
+                e.user_id = %s AND at.assignee_id = %s AND at.assigner_id != %s
             ORDER BY
                 e.date, e.time
         """
-        cursor.execute(query, (user_id,))
+        cursor.execute(query, (user_id, user_id, user_id))
         tasks = cursor.fetchall()
         return jsonify(tasks), 200
     except Error as e:
@@ -225,6 +225,32 @@ def delete_task(task_id):
         return jsonify({"error": f"An internal error occurred: {e}"}), 500
     finally:
         if conn and conn.is_connected(): cursor.close(); conn.close()
+
+@collaboration_bp.route("/api/tasks/own")
+def get_own_tasks():
+    """Get tasks created by the user themselves (not assigned by others)"""
+    if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
+    user_id = session['user_id']
+    conn = get_db_connection()
+    if not conn: return jsonify({"error": "Database error"}), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        # Get tasks that belong to the user but are NOT assigned by others
+        query = """
+            SELECT e.*
+            FROM events e
+            LEFT JOIN assigned_tasks at ON e.id = at.event_id
+            WHERE e.user_id = %s AND (at.event_id IS NULL OR at.assigner_id = %s)
+            ORDER BY e.date, e.time
+        """
+        cursor.execute(query, (user_id, user_id))
+        tasks = cursor.fetchall()
+        return jsonify(tasks), 200
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn.is_connected(): cursor.close(); conn.close()
 
 @collaboration_bp.route("/api/collaboration/events/month_view")
 def get_events_for_month():

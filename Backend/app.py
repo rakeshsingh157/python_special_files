@@ -45,10 +45,12 @@ def home():
     return render_template("index.html")
 
 
-@app.route("/profile/<user_id>")
-def profile_page(user_id):
-    """Serves the user profile page."""
-    return render_template("profile.html", user_id=user_id)
+@app.route("/profile")
+def profile_page():
+    """Serves the user profile page using session data."""
+    if 'user_id' not in session:
+        return redirect('/')
+    return render_template("profile.html")
 
 
 @app.route("/home")

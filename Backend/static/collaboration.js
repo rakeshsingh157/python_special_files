@@ -16,9 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarGrid = document.getElementById('calendar-grid');
 
     // --- Global state ---
+    // --- IST TIMEZONE UTILITIES ---
+    const getISTDate = () => {
+        const now = new Date();
+        // Convert to IST (+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // UTC time
+        return new Date(utc + istOffset);
+    };
+    
     let allCollaborators = [];
     let isShowingAll = false;
-    let calendarDate = new Date();
+    let calendarDate = getISTDate();
 
     // --- Loader Functions ---
     const showLoader = () => loaderOverlay.classList.remove('hidden');
@@ -230,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCalendar();
         });
         document.getElementById('today-btn').addEventListener('click', () => {
-            calendarDate = new Date();
+            calendarDate = getISTDate();
             renderCalendar();
         });
     }
@@ -300,6 +309,22 @@ document.addEventListener('DOMContentLoaded', () => {
         assignTaskModal.dataset.assigneeId = assigneeId;
         document.getElementById('assign-task-form').reset();
         document.getElementById('assign-task-modal-message').textContent = '';
+        
+        // Set default IST date/time
+        const istNow = getISTDate();
+        const dateInput = document.getElementById('assign-task-date');
+        const timeInput = document.getElementById('assign-task-time');
+        
+        if (dateInput) {
+            dateInput.value = istNow.toISOString().split('T')[0]; // YYYY-MM-DD
+        }
+        
+        if (timeInput) {
+            const hours = istNow.getHours().toString().padStart(2, '0');
+            const minutes = istNow.getMinutes().toString().padStart(2, '0');
+            timeInput.value = `${hours}:${minutes}`;
+        }
+        
         assignTaskModal.style.display = 'flex';
     }
 
@@ -385,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderCalendar() {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth();
-        const today = new Date();
+        const today = getISTDate();
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;

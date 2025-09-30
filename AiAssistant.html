@@ -36,14 +36,14 @@
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
-            <div class="sidebar-logo">HelpScout</div>
+            <div class="sidebar-logo">remindeme</div>
             <nav>
               <ul>
                     <li onclick="window.location.href='/home'">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                         Home
                     </li>
-                    <li onclick="window.location.href='/profile/user'">
+                    <li onclick="window.location.href='/profile'">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         My Profile
                     </li>
@@ -119,6 +119,6 @@
         </aside>
     </div>
 
-    <script src="{{ url_for('static', filename='ai_assistant.js') }}"></script>
+    <script src="{{ url_for('static', filename='ai_assistant.js') }}?v=2.0"></script>
 </body>
 </html>

@@ -126,7 +126,7 @@ def login_user():
 
         if user and checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
             session['user_id'] = user['user_id']
-            return jsonify({'message': 'Login successful', 'user_id': user['user_id']}), 200
+            return jsonify({'message': 'Login successful'}), 200
         else:
             return jsonify({'message': 'Invalid email or password.'}), 401
     except mysql.connector.Error as err:

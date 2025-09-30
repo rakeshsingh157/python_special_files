@@ -206,6 +206,7 @@ function getEmojiForCategory(category) {
 }
 
 function formatDate(dateString) {
-    const options = { weekday: 'short', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    // Use IST timezone formatting
+    const options = { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' };
+    return new Date(dateString).toLocaleDateString('en-IN', options);
 }

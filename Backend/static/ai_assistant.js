@@ -1,4 +1,26 @@
+// AI Assistant Calendar with Event Colors - FUNCTION ORDER FIXED v2.0
+// Updated for IST and Event Loading with correct /api/events/month_view endpoint
+// Fixed: Moved function definitions before usage to prevent ReferenceError
 document.addEventListener('DOMContentLoaded', () => {
+    // --- IST TIMEZONE UTILITIES ---
+    const getISTDate = () => {
+        const now = new Date();
+        // Convert to IST (+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // UTC time
+        return new Date(utc + istOffset);
+    };
+
+    // --- API HELPER ---
+    const apiFetch = async (url, options = {}) => {
+        try {
+            const response = await fetch(url, options);
+            if (response.status === 401) { window.location.href = '/'; return null; }
+            if (!response.ok) { console.error("API error:", response.status); return null; }
+            return response.json();
+        } catch (error) { console.error("Network error:", error); return null; }
+    };
+
     // --- CHAT Elements ---
     const chatWindow = document.getElementById('ai-chat-window');
     const inputTextArea = document.getElementById('ai-input-textarea');
@@ -7,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CALENDAR Elements ---
     const calendarGrid = document.getElementById('calendar-grid');
-    let calendarDate = new Date();
+    let calendarDate = getISTDate();
 
     // --- Chat Logic ---
     const sendMessage = async () => {
@@ -104,10 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- Calendar Logic ---
-    const renderCalendar = () => {
+    const renderCalendar = async () => {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth();
-        const today = new Date();
+        const today = getISTDate();
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
@@ -127,8 +149,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let day = 1; day <= daysInMonth; day++) {
             const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
-            calendarGrid.innerHTML += `<span class="day-cell ${isToday ? 'today' : ''}">${day}</span>`;
+            calendarGrid.innerHTML += `<span class="day-cell ${isToday ? 'today' : ''}" data-day="${day}">${day}</span>`;
         }
+        
+        await fetchAndHighlightDays(year, month);
+    };
+
+    const fetchAndHighlightDays = async (year, month) => {
+        const highlightData = await apiFetch(`/api/events/month_view?year=${year}&month=${month + 1}`);
+        if (!highlightData) return;
+        console.log('AI Calendar highlightData:', highlightData);
+        
+        const dayCells = calendarGrid.querySelectorAll('.day-cell');
+        dayCells.forEach(cell => {
+            const day = parseInt(cell.dataset.day, 10);
+            cell.classList.remove('has-both', 'has-pending', 'has-completed');
+            
+            let isPending = false, isCompleted = false;
+            if (highlightData && typeof highlightData === 'object' && !Array.isArray(highlightData)) {
+                if (highlightData[day]) {
+                    isPending = !!highlightData[day].hasPending;
+                    isCompleted = !!highlightData[day].hasCompleted;
+                }
+            } else if (highlightData.pending && highlightData.completed) {
+                isPending = highlightData.pending.includes(day);
+                isCompleted = highlightData.completed.includes(day);
+            } else if (Array.isArray(highlightData)) {
+                isPending = highlightData.includes(day);
+            }
+            
+            if (isPending && isCompleted) {
+                cell.classList.add('has-both');
+                console.log(`AI Calendar Day ${day}: has-both`);
+            } else if (isPending) {
+                cell.classList.add('has-pending');
+                console.log(`AI Calendar Day ${day}: has-pending`);
+            } else if (isCompleted) {
+                cell.classList.add('has-completed');
+                console.log(`AI Calendar Day ${day}: has-completed`);
+            }
+        });
     };
 
     // --- Initial Setup ---
@@ -153,17 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Calendar listeners
-        document.getElementById('prev-month').addEventListener('click', () => {
+        document.getElementById('prev-month').addEventListener('click', async () => {
             calendarDate.setMonth(calendarDate.getMonth() - 1);
-            renderCalendar();
+            await renderCalendar();
         });
-        document.getElementById('next-month').addEventListener('click', () => {
+        document.getElementById('next-month').addEventListener('click', async () => {
             calendarDate.setMonth(calendarDate.getMonth() + 1);
-            renderCalendar();
+            await renderCalendar();
         });
-        document.getElementById('today-btn').addEventListener('click', () => {
-            calendarDate = new Date();
-            renderCalendar();
+        document.getElementById('today-btn').addEventListener('click', async () => {
+            calendarDate = getISTDate();
+            await renderCalendar();
         });
     };
 

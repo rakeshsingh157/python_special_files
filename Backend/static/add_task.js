@@ -1,4 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- IST TIMEZONE UTILITIES ---
+    const getISTDate = () => {
+        const now = new Date();
+        // Convert to IST (+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // UTC time
+        return new Date(utc + istOffset);
+    };
+
+    // Set default date/time to current IST
+    const istNow = getISTDate();
+    const taskDateInput = document.getElementById('task-date');
+    const taskTimeInput = document.getElementById('task-time');
+    
+    if (taskDateInput && !taskDateInput.value) {
+        taskDateInput.value = istNow.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+    
+    if (taskTimeInput && !taskTimeInput.value) {
+        const hours = istNow.getHours().toString().padStart(2, '0');
+        const minutes = istNow.getMinutes().toString().padStart(2, '0');
+        taskTimeInput.value = `${hours}:${minutes}`;
+    }
+
     const taskForm = document.getElementById('add-task-form');
     const messageEl = document.getElementById('form-message');
 
